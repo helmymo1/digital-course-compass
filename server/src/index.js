@@ -1,12 +1,13 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
 
-// Load environment variables
-dotenv.config({ path: '../.env' }); // Adjusted path to .env
+// Load environment variables - this is still useful if any part of the app setup needs them directly,
+// though server.js also loads them for DB connection and port.
+// Ensuring correct path to .env from server/src/index.js
+dotenv.config({ path: require('path').resolve(__dirname, '../../.env') });
+
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json()); // For parsing application/json
@@ -16,6 +17,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 // Mount Routers
+// Ensure your API base path is consistent. If it's /api/v1, it should be used here.
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes); // Mount user routes
 
@@ -24,21 +26,11 @@ app.get('/', (req, res) => {
   res.send('Auth System API is running!');
 });
 
-// Connect to MongoDB
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-  console.error('MongoDB URI not found. Please set MONGODB_URI in your .env file');
-  process.exit(1); // Exit if DB URI is not set
-}
+// Error handling middleware (optional, but good practice)
+// Example:
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(500).send('Something broke!');
+// });
 
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('MongoDB connected successfully.'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1); // Exit on connection error
-  });
-
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+module.exports = app; // Export the configured app instance
