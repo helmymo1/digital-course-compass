@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-// Load environment variables from .env in the root (one level up from 'server' directory)
-dotenv.config({ path: __dirname + '/../.env' });
-
 const app = require('./src/index'); // Import the configured Express app
 
 const PORT = process.env.PORT || 3000;
