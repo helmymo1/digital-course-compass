@@ -1,6 +1,5 @@
-
-import React from 'react';
-import Navigation from '@/components/Navigation';
+import React, { useState, useEffect } from 'react';
+import Header from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -9,6 +8,24 @@ import { BookOpen, Clock, Trophy, User, Settings, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
+  const [userRole, setUserRole] = useState<'student' | 'teacher'>('student');
+  const [userName, setUserName] = useState('Student');
+
+  useEffect(() => {
+    const role = localStorage.getItem('userRole') as 'student' | 'teacher' || 'student';
+    const name = localStorage.getItem('userName') || 'Student';
+    setUserRole(role);
+    setUserName(name);
+  }, []);
+
+  const handleRoleSwitch = (newRole: 'student' | 'teacher') => {
+    setUserRole(newRole);
+    // Redirect to appropriate dashboard
+    if (newRole === 'teacher') {
+      window.location.href = '/teacher-dashboard';
+    }
+  };
+
   const enrolledCourses = [
     {
       id: '1',
@@ -56,12 +73,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      <Header userRole={userRole} userName={userName} onRoleSwitch={handleRoleSwitch} />
       
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-8 mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, Student!</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {userName}!</h1>
           <p className="text-blue-100">Ready to continue your learning journey?</p>
         </div>
 
@@ -169,14 +186,18 @@ const Dashboard = () => {
                     Browse Courses
                   </Button>
                 </Link>
-                <Button variant="outline" className="w-full justify-start">
-                  <User className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Account Settings
-                </Button>
+                <Link to="/profile">
+                  <Button variant="outline" className="w-full justify-start">
+                    <User className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </Link>
+                <Link to="/account">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Account Settings
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 

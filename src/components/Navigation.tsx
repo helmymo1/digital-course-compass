@@ -57,8 +57,8 @@ const Navigation = () => {
             <Link to="/login">
               <Button variant="ghost">Login</Button>
             </Link>
-            <Link to="/courses">
-              <Button>Get Started</Button>
+            <Link to="/signup">
+              <Button>Sign Up</Button>
             </Link>
           </div>
 
@@ -96,8 +96,8 @@ const Navigation = () => {
                   <Link to="/login" onClick={() => setIsOpen(false)}>
                     <Button variant="ghost" className="w-full">Login</Button>
                   </Link>
-                  <Link to="/courses" onClick={() => setIsOpen(false)}>
-                    <Button className="w-full">Get Started</Button>
+                  <Link to="/signup" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full">Sign Up</Button>
                   </Link>
                 </div>
               </div>
