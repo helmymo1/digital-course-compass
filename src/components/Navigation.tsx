@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Navigation = () => {
@@ -43,6 +42,14 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            <Link
+              to="/dashboard"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              Dashboard
+            </Link>
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -50,8 +57,8 @@ const Navigation = () => {
             <Link to="/login">
               <Button variant="ghost">Login</Button>
             </Link>
-            <Link to="/signup">
-              <Button>Sign Up</Button>
+            <Link to="/courses">
+              <Button>Get Started</Button>
             </Link>
           </div>
 
@@ -76,12 +83,21 @@ const Navigation = () => {
                     {item.name}
                   </Link>
                 ))}
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className={`text-lg font-medium transition-colors hover:text-primary ${
+                    isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  Dashboard
+                </Link>
                 <div className="flex flex-col space-y-2 pt-4">
                   <Link to="/login" onClick={() => setIsOpen(false)}>
                     <Button variant="ghost" className="w-full">Login</Button>
                   </Link>
-                  <Link to="/signup" onClick={() => setIsOpen(false)}>
-                    <Button className="w-full">Sign Up</Button>
+                  <Link to="/courses" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full">Get Started</Button>
                   </Link>
                 </div>
               </div>

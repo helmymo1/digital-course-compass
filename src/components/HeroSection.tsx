@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight, Play, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const HeroSection = () => {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -42,6 +45,7 @@ const HeroSection = () => {
             size="lg" 
             variant="outline" 
             className="text-lg px-8 py-6 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+            onClick={() => setIsVideoOpen(true)}
           >
             <Play className="mr-2 h-5 w-5" />
             Watch Demo
@@ -64,6 +68,21 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Modal */}
+      <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
+        <DialogContent className="max-w-4xl p-0">
+          <div className="relative aspect-video">
+            <iframe
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              title="LearnHub Promotional Video"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

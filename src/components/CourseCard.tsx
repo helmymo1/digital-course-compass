@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Star, Clock, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface CourseCardProps {
   id: string;
@@ -35,6 +36,8 @@ const CourseCard: React.FC<CourseCardProps> = ({
   level,
   onViewDetails
 }) => {
+  const navigate = useNavigate();
+
   const formatPrice = (price: number) => {
     return price === 0 ? 'Free' : `$${price}`;
   };
@@ -45,6 +48,14 @@ const CourseCard: React.FC<CourseCardProps> = ({
       case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
       case 'Advanced': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleViewDetails = () => {
+    if (onViewDetails) {
+      onViewDetails(id);
+    } else {
+      navigate(`/course/${id}`);
     }
   };
 
@@ -107,7 +118,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
       <CardFooter className="px-4 pt-2">
         <Button 
           className="w-full" 
-          onClick={() => onViewDetails?.(id)}
+          onClick={handleViewDetails}
         >
           View Details
         </Button>

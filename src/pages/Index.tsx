@@ -4,6 +4,7 @@ import Navigation from '@/components/Navigation';
 import HeroSection from '@/components/HeroSection';
 import FeatureSection from '@/components/FeatureSection';
 import TestimonialsCarousel from '@/components/TestimonialsCarousel';
+import CoursesPreview from '@/components/CoursesPreview';
 
 const Index = () => {
   return (
@@ -11,6 +12,7 @@ const Index = () => {
       <Navigation />
       <main>
         <HeroSection />
+        <CoursesPreview />
         <FeatureSection />
         <TestimonialsCarousel />
       </main>
