@@ -25,7 +25,10 @@ const lessonRoutes = require('./routes/lessonRoutes'); // Import lesson routes
 const progressRoutes = require('./routes/progressRoutes'); // Import progress routes
 const activityLogRoutes = require('./routes/activityLogRoutes'); // Import activity log routes
 const quizRoutes = require('./routes/quizRoutes'); // Import quiz routes
-const quizAttemptRoutes = require('./routes/quizAttemptRoutes'); // Import quiz attempt routes
+// quizAttemptRoutes handles actions on attempts for a *specific* quiz, so it's nested
+const quizAttemptRoutes = require('./routes/quizAttemptRoutes');
+// genericQuizAttemptRoutes handles actions on attempts directly, e.g., by attempt ID
+const genericQuizAttemptRoutes = require('./routes/genericQuizAttemptRoutes');
 const learningPathRoutes = require('./routes/learningPathRoutes'); // Import learning path routes
 const userLearningPathRoutes = require('./routes/userLearningPathRoutes'); // Import user learning path routes
 const feedbackRoutes = require('./routes/feedbackRoutes'); // Import feedback routes
@@ -44,8 +47,11 @@ app.use('/api/v1/modules', moduleRoutes); // Mount module routes
 app.use('/api/v1/lessons', lessonRoutes); // Mount lesson routes
 app.use('/api/v1/progress', progressRoutes); // Mount progress routes
 app.use('/api/v1/activity', activityLogRoutes); // Mount activity log routes
-app.use('/api/v1/quizzes', quizRoutes); // Mount quiz routes
-app.use('/api/v1/attempts', quizAttemptRoutes); // Mount quiz attempt routes
+app.use('/api/v1/quizzes', quizRoutes); // Mount quiz routes (e.g., /api/v1/quizzes/:quizId)
+// Mount quizAttemptRoutes nested under quizzes for actions specific to a quiz's attempts
+app.use('/api/v1/quizzes/:quizId/attempts', quizAttemptRoutes); // e.g. POST /api/v1/quizzes/:quizId/attempts
+// Mount genericQuizAttemptRoutes for general attempt actions (e.g., getting an attempt by its own ID)
+app.use('/api/v1/quiz-attempts', genericQuizAttemptRoutes); // e.g. GET /api/v1/quiz-attempts/:attemptId
 app.use('/api/v1/learning-paths', learningPathRoutes); // Mount learning path routes
 app.use('/api/v1/user-learning-paths', userLearningPathRoutes); // Mount user learning path routes
 app.use('/api/v1/feedback', feedbackRoutes); // Mount feedback routes

@@ -7,8 +7,9 @@ const {
     // createLesson and getLessonsByModule will be handled in moduleRoutes.js
 } = require('../controllers/lessonController');
 const { getLessonSpecificProgress } = require('../controllers/studentProgressController'); // Import progress controller
-const { createQuiz, getQuizByLesson } = require('../controllers/quizController'); // Import quiz controllers
-const { protect, authorize, checkRole } = require('../middleware/authMiddleware'); // Assuming authorize takes roles, added checkRole
+// Importing createQuizForLesson and potentially getQuizByLessonId if that's the intended function
+const { createQuizForLesson, getQuizByLesson } = require('../controllers/quizController');
+const { protect, authorize, checkRole } = require('../middleware/authMiddleware');
 
 // These routes are intended to be mounted at /api/v1/lessons
 
@@ -25,10 +26,10 @@ router.route('/:lessonId/progress')
 
 // Routes for managing a quiz associated with a lesson
 router.route('/:lessonId/quiz') // Singular 'quiz' as a lesson has one quiz
-    .get(protect, getQuizByLesson); // Get the quiz for this lesson
-
-router.route('/:lessonId/quizzes') // Plural 'quizzes' for POST convention
-    .post(protect, checkRole(['Instructor', 'Admin']), createQuiz); // Create a quiz for this lesson
+    // Assuming getQuizByLesson fetches the quiz using the lessonId.
+    // If a quiz ID is known, /api/v1/quizzes/:quizId would be used.
+    .get(protect, getQuizByLesson) // Get the quiz for this lesson
+    .post(protect, checkRole(['Instructor', 'Admin']), createQuizForLesson); // Create a quiz for this lesson
 
 
 module.exports = router;
