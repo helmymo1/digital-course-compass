@@ -14,7 +14,7 @@ const {
 } = require('../controllers/courseController');
 
 // Import middleware
-const { protect, checkRole } = require('../middleware/authMiddleware');
+const { protect, checkRole, checkEnrollment, authorize } = require('../middleware/authMiddleware'); // Added checkEnrollment and authorize (though authorize might not be used if checkRole is preferred)
 
 // --- Public Routes ---
 // Get all courses (controller handles filtering for status e.g. 'published')
@@ -42,7 +42,30 @@ router.delete('/:id', protect, deleteCourse);
 router.post('/:id/enroll', protect, checkRole(['Student']), enrollCourse);
 
 // Course Reviews (for Students who are enrolled)
-// addCourseReview controller logic verifies if the student is enrolled in the course.
-router.post('/:id/reviews', protect, checkRole(['Student']), addCourseReview);
+// Using checkEnrollment middleware to verify enrollment status.
+router.post(
+    '/:id/reviews',
+    protect,
+    checkRole(['Student']), // Ensures user has 'Student' role
+    checkEnrollment(['active', 'completed']), // Ensures student is/was enrolled and can review
+    addCourseReview
+);
+
+// --- Routes for Enrolled Students ---
+// Placeholder for fetching specific course content data, accessible only by enrolled students
+router.get(
+    '/:id/content-data',
+    protect,
+    checkEnrollment(), // Defaults to ['active', 'completed']
+    (req, res) => {
+        // In a real scenario, this would call a controller function:
+        // courseController.getSpecificCourseContent(req, res);
+        res.status(200).json({
+            success: true,
+            message: `Content data for course ${req.params.id} accessible by enrolled user ${req.user.name}`,
+            // req.enrollment might be available here if attached by checkEnrollment middleware
+        });
+    }
+);
 
 module.exports = router;

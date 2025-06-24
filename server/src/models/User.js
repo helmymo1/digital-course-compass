@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema({
   googleId: String,
   githubId: String,
   linkedinId: String,
+  stripeCustomerId: { // Added Stripe Customer ID
+    type: String,
+    // unique: true, // Optional: if you want to ensure it's unique, though Stripe IDs are inherently unique
+    // sparse: true, // Optional: if using unique, use sparse for users who don't have one yet
+  },
 }, { timestamps: true });
 
 // Pre-save hook to hash password before saving
