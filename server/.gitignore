@@ -1,2 +1,6 @@
 node_modules/
 .env
+
+# Ignore uploaded media files and test uploads
+uploads/
+uploads_test/
