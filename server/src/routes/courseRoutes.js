@@ -12,6 +12,8 @@ const {
   addCourseReview,
   getCourseReviews,
 } = require('../controllers/courseController');
+const { createModule, getModulesByCourse } = require('../controllers/moduleController'); // Import module controllers
+const { getCourseProgress } = require('../controllers/studentProgressController'); // Import progress controller
 
 // Import middleware
 const { protect, checkRole, checkEnrollment, authorize } = require('../middleware/authMiddleware'); // Added checkEnrollment and authorize (though authorize might not be used if checkRole is preferred)
@@ -67,5 +69,55 @@ router.get(
         });
     }
 );
+
+// --- Routes for Course Modules ---
+// POST a new module to a course (Instructors, Admins)
+// GET all modules for a course (public or enrolled users - controller should handle visibility if needed)
+// Note: Parameter name here is :id for the course, matching existing routes.
+// The moduleController's createModule and getModulesByCourse expect req.params.courseId.
+// This will require either:
+//   a) The controller to be flexible (check req.params.id or req.params.courseId)
+//   b) Middleware to map req.params.id to req.params.courseId before calling the controller
+//   c) Renaming :id to :courseId in this file for consistency (major change)
+//   d) Updating moduleController to use req.params.id (if these routes are only here)
+
+// For now, let's assume moduleController will be adapted or a small middleware will handle param mapping.
+// Or, more simply, ensure moduleController uses the param name as it's passed.
+// The `createModule` and `getModulesByCourse` in `moduleController.js` use `req.params.courseId`.
+// Let's make courseRoutes.js pass `courseId` correctly.
+// This means changing the route parameter name here to :courseId for these specific routes.
+// This is the cleanest approach if these module routes are primarily nested under courses.
+
+// Re-evaluating: The moduleController uses `req.params.courseId`.
+// The planned routes are /api/v1/courses/:courseId/modules.
+// So, this file should use :courseId for these specific routes.
+// However, other routes in this file use :id.
+// This can lead to inconsistencies if not handled carefully.
+
+// Option: Keep :id and adapt controller (less ideal as controller is for modules)
+// Option: Use a new router instance for /:courseId/modules to avoid param conflicts.
+
+// Let's try to keep it simple and assume the controller can be made flexible or we adjust it later.
+// For now, using :id as per the file's convention and noting controller needs to be aware.
+// The createModule and getModulesByCourse in moduleController.js expect req.params.courseId.
+// The routes in moduleRoutes.js were defined as /:courseId/modules.
+// For consistency with the new moduleController and moduleRoutes,
+// it's better to use :courseId here as well for the module-related endpoints.
+// This means courseController.js might need to be updated if it uses :id for courses.
+// Looking at courseController.js, it uses :id or :courseId. It seems flexible.
+// Let's stick to :courseId for the path to be explicit.
+
+router.route('/:courseId/modules')
+    .post(protect, checkRole(['Instructor', 'Admin']), createModule) // req.params.courseId will be available
+    .get(getModulesByCourse); // req.params.courseId will be available
+
+// --- Route for Course Progress ---
+// GET student's progress for a specific course
+// Access: Student (own progress), Instructor of course, Admin
+// The controller `getCourseProgress` handles verifying enrollment or role.
+// It expects req.params.courseId
+router.route('/:courseId/progress')
+    .get(protect, getCourseProgress); // protect ensures user is logged in. Controller does further auth.
+
 
 module.exports = router;
