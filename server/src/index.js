@@ -15,11 +15,13 @@ app.use(express.json()); // For parsing application/json
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const courseRoutes = require('./routes/courseRoutes'); // Import course routes
 
 // Mount Routers
 // Ensure your API base path is consistent. If it's /api/v1, it should be used here.
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes); // Mount user routes
+app.use('/api/v1/courses', courseRoutes); // Mount course routes
 
 // Basic Route
 app.get('/', (req, res) => {
