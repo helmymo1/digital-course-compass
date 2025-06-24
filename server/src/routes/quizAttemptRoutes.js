@@ -1,10 +1,21 @@
 const express = require('express');
-const router = express.Router();
-const { getQuizAttemptById } = require('../controllers/quizController'); // Controller still has this function
-const { protect } = require('../middleware/authMiddleware');
+// Using mergeParams to access :quizId from parent router if this router is nested.
+// e.g., if app.use('/api/v1/quizzes/:quizId/attempts', quizAttemptRoutes);
+const router = express.Router({ mergeParams: true });
 
-// Route for getting a specific quiz attempt by its ID
-// This router will be mounted at /api/v1/attempts
-router.get('/:attemptId', protect, getQuizAttemptById);
+const {
+    submitQuizAttempt,
+    getAttemptsForQuiz
+} = require('../controllers/quizAttemptController'); // Corrected controller name
+
+const { protect, checkRole } = require('../middleware/authMiddleware');
+
+// These routes are intended to be mounted under a specific quiz, e.g., /api/v1/quizzes/:quizId/attempts
+router.route('/')
+    .post(protect, checkRole(['Student']), submitQuizAttempt) // POST /api/v1/quizzes/:quizId/attempts
+    .get(protect, checkRole(['Instructor', 'Admin']), getAttemptsForQuiz); // GET /api/v1/quizzes/:quizId/attempts
 
 module.exports = router;
+
+// A separate router will be needed for routes like GET /api/v1/quiz-attempts/:attemptId
+// Let's call that mainQuizAttemptRouter or similar and define it next.
