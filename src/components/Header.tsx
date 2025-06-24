@@ -10,13 +10,13 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { User, Settings, LogOut, BookOpen, GraduationCap } from 'lucide-react';
+import { User, Settings, LogOut, BookOpen, GraduationCap, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
-  userRole?: 'student' | 'teacher';
+  userRole?: 'student' | 'teacher' | 'admin';
   userName?: string;
-  onRoleSwitch?: (role: 'student' | 'teacher') => void;
+  onRoleSwitch?: (role: 'student' | 'teacher' | 'admin') => void;
 }
 
 const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: HeaderProps) => {
@@ -29,10 +29,32 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
     navigate('/');
   };
 
-  const handleRoleSwitch = (newRole: 'student' | 'teacher') => {
+  const handleRoleSwitch = (newRole: 'student' | 'teacher' | 'admin') => {
     localStorage.setItem('userRole', newRole);
     if (onRoleSwitch) {
       onRoleSwitch(newRole);
+    }
+  };
+
+  const getRoleBadgeVariant = () => {
+    switch (userRole) {
+      case 'admin':
+        return 'destructive';
+      case 'teacher':
+        return 'default';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const getRoleDisplayName = () => {
+    switch (userRole) {
+      case 'admin':
+        return 'Administrator';
+      case 'teacher':
+        return 'Instructor';
+      default:
+        return 'Student';
     }
   };
 
@@ -48,8 +70,8 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
           </Link>
 
           <div className="flex items-center space-x-4">
-            <Badge variant={userRole === 'teacher' ? 'default' : 'secondary'}>
-              {userRole === 'teacher' ? 'Instructor' : 'Student'}
+            <Badge variant={getRoleBadgeVariant()}>
+              {getRoleDisplayName()}
             </Badge>
 
             <DropdownMenu>
@@ -80,6 +102,11 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
                 <DropdownMenuItem onClick={() => handleRoleSwitch('teacher')}>
                   <GraduationCap className="mr-2 h-4 w-4" />
                   <span>Switch to Instructor</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => handleRoleSwitch('admin')}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Switch to Admin</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuSeparator />
