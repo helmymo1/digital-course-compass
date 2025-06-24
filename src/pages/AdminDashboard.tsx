@@ -8,32 +8,34 @@ import UserManagement from '@/components/admin/UserManagement';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import RevenueControl from '@/components/admin/RevenueControl';
 import PlatformSettings from '@/components/admin/PlatformSettings';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { t } = useLanguage();
 
   // Mock admin stats
   const stats = [
     {
-      title: 'Total Students',
+      title: t('total_students'),
       value: '2,847',
       change: '+12%',
       icon: <Users className="h-5 w-5" />
     },
     {
-      title: 'Total Teachers',
+      title: t('total_teachers'),
       value: '156',
       change: '+8%',
       icon: <User className="h-5 w-5" />
     },
     {
-      title: 'Total Revenue',
+      title: t('total_revenue'),
       value: '$87,420',
       change: '+23%',
       icon: <BarChart className="h-5 w-5" />
     },
     {
-      title: 'Active Courses',
+      title: t('active_courses'),
       value: '342',
       change: '+15%',
       icon: <Settings className="h-5 w-5" />
@@ -46,16 +48,16 @@ const AdminDashboard = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your platform and monitor performance</p>
+          <h1 className="text-3xl font-bold mb-2">{t('admin_dashboard')}</h1>
+          <p className="text-muted-foreground">{t('manage_platform')}</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="revenue">Revenue Control</TabsTrigger>
+            <TabsTrigger value="overview">{t('overview')}</TabsTrigger>
+            <TabsTrigger value="users">{t('user_management')}</TabsTrigger>
+            <TabsTrigger value="analytics">{t('analytics')}</TabsTrigger>
+            <TabsTrigger value="revenue">{t('revenue_control')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -68,7 +70,7 @@ const AdminDashboard = () => {
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
                         <p className="text-2xl font-bold">{stat.value}</p>
-                        <p className="text-xs text-green-600">{stat.change} from last month</p>
+                        <p className="text-xs text-green-600">{stat.change} {t('from_last_month')}</p>
                       </div>
                       <div className="text-muted-foreground">{stat.icon}</div>
                     </div>
@@ -81,59 +83,59 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
+                  <CardTitle>{t('quick_actions')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <button 
                     className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors"
                     onClick={() => setActiveTab('users')}
                   >
-                    <div className="font-medium">Manage Users</div>
-                    <div className="text-sm text-muted-foreground">Add, edit, or remove students and teachers</div>
+                    <div className="font-medium">{t('manage_users')}</div>
+                    <div className="text-sm text-muted-foreground">{t('manage_users_desc')}</div>
                   </button>
                   <button 
                     className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors"
                     onClick={() => setActiveTab('analytics')}
                   >
-                    <div className="font-medium">View Analytics</div>
-                    <div className="text-sm text-muted-foreground">Monitor platform performance and engagement</div>
+                    <div className="font-medium">{t('view_analytics')}</div>
+                    <div className="text-sm text-muted-foreground">{t('view_analytics_desc')}</div>
                   </button>
                   <button 
                     className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors"
                     onClick={() => setActiveTab('revenue')}
                   >
-                    <div className="font-medium">Revenue Settings</div>
-                    <div className="text-sm text-muted-foreground">Control course pricing and revenue distribution</div>
+                    <div className="font-medium">{t('revenue_settings')}</div>
+                    <div className="text-sm text-muted-foreground">{t('revenue_settings_desc')}</div>
                   </button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
+                  <CardTitle>{t('recent_activity')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center py-2 border-b">
                       <div>
-                        <p className="font-medium">New teacher registered</p>
-                        <p className="text-sm text-muted-foreground">Sarah Johnson joined</p>
+                        <p className="font-medium">{t('new_teacher_registered')}</p>
+                        <p className="text-sm text-muted-foreground">{t('sarah_johnson_joined')}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground">2h ago</span>
+                      <span className="text-xs text-muted-foreground">2{t('hours_ago')}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
                       <div>
-                        <p className="font-medium">Course published</p>
-                        <p className="text-sm text-muted-foreground">Advanced React Development</p>
+                        <p className="font-medium">{t('course_published')}</p>
+                        <p className="text-sm text-muted-foreground">{t('advanced_react_dev')}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground">4h ago</span>
+                      <span className="text-xs text-muted-foreground">4{t('hours_ago')}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <div>
-                        <p className="font-medium">Payment processed</p>
-                        <p className="text-sm text-muted-foreground">$299 course enrollment</p>
+                        <p className="font-medium">{t('payment_processed')}</p>
+                        <p className="text-sm text-muted-foreground">{t('course_enrollment')}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground">6h ago</span>
+                      <span className="text-xs text-muted-foreground">6{t('hours_ago')}</span>
                     </div>
                   </div>
                 </CardContent>

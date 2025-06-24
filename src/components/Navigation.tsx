@@ -4,15 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { t } = useLanguage();
 
   const navItems = [
-    { name: 'Courses', href: '/courses' },
-    { name: 'About Us', href: '/about' },
-    { name: 'Contact Us', href: '/contact' },
+    { name: t('courses'), href: '/courses' },
+    { name: t('about'), href: '/about' },
+    { name: t('contact'), href: '/contact' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -26,7 +29,7 @@ const Navigation = () => {
             <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
               <span className="text-sm font-bold text-primary-foreground">L</span>
             </div>
-            <span className="font-bold text-xl">LearnHub</span>
+            <span className="font-bold text-xl">{t('learnhub')}</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -48,17 +51,18 @@ const Navigation = () => {
                 isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              Dashboard
+              {t('dashboard')}
             </Link>
           </div>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
+            <LanguageSwitcher />
             <Link to="/login">
-              <Button variant="ghost">Login</Button>
+              <Button variant="ghost">{t('login')}</Button>
             </Link>
             <Link to="/signup">
-              <Button>Sign Up</Button>
+              <Button>{t('signup')}</Button>
             </Link>
           </div>
 
@@ -71,6 +75,9 @@ const Navigation = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-80">
               <div className="flex flex-col space-y-4 mt-8">
+                <div className="mb-4">
+                  <LanguageSwitcher />
+                </div>
                 {navItems.map((item) => (
                   <Link
                     key={item.name}
@@ -90,14 +97,14 @@ const Navigation = () => {
                     isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
                 <div className="flex flex-col space-y-2 pt-4">
                   <Link to="/login" onClick={() => setIsOpen(false)}>
-                    <Button variant="ghost" className="w-full">Login</Button>
+                    <Button variant="ghost" className="w-full">{t('login')}</Button>
                   </Link>
                   <Link to="/signup" onClick={() => setIsOpen(false)}>
-                    <Button className="w-full">Sign Up</Button>
+                    <Button className="w-full">{t('signup')}</Button>
                   </Link>
                 </div>
               </div>

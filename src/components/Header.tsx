@@ -12,6 +12,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { User, Settings, LogOut, BookOpen, GraduationCap, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface HeaderProps {
   userRole?: 'student' | 'teacher' | 'admin';
@@ -21,6 +23,7 @@ interface HeaderProps {
 
 const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: HeaderProps) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -50,11 +53,11 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
   const getRoleDisplayName = () => {
     switch (userRole) {
       case 'admin':
-        return 'Administrator';
+        return t('admin');
       case 'teacher':
-        return 'Instructor';
+        return t('teacher');
       default:
-        return 'Student';
+        return t('student');
     }
   };
 
@@ -66,10 +69,11 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
             <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
               <span className="text-sm font-bold text-primary-foreground">L</span>
             </div>
-            <span className="font-bold text-xl">LearnHub</span>
+            <span className="font-bold text-xl">{t('learnhub')}</span>
           </Link>
 
           <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
             <Badge variant={getRoleBadgeVariant()}>
               {getRoleDisplayName()}
             </Badge>
@@ -96,17 +100,17 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
                 
                 <DropdownMenuItem onClick={() => handleRoleSwitch('student')}>
                   <BookOpen className="mr-2 h-4 w-4" />
-                  <span>Switch to Student</span>
+                  <span>{t('switch_to_student')}</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem onClick={() => handleRoleSwitch('teacher')}>
                   <GraduationCap className="mr-2 h-4 w-4" />
-                  <span>Switch to Instructor</span>
+                  <span>{t('switch_to_teacher')}</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={() => handleRoleSwitch('admin')}>
                   <Shield className="mr-2 h-4 w-4" />
-                  <span>Switch to Admin</span>
+                  <span>{t('switch_to_admin')}</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuSeparator />
@@ -114,14 +118,14 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
                 <Link to="/profile">
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <span>{t('profile')}</span>
                   </DropdownMenuItem>
                 </Link>
                 
                 <Link to="/account">
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Account Settings</span>
+                    <span>{t('account')}</span>
                   </DropdownMenuItem>
                 </Link>
                 
@@ -129,7 +133,7 @@ const Header = ({ userRole = 'student', userName = 'User', onRoleSwitch }: Heade
                 
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
