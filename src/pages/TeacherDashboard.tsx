@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BookOpen, Users, DollarSign, Plus, Eye, Edit, BarChart3, Trash2, Gift, TrendingUp } from 'lucide-react';
+import { BookOpen, Users, DollarSign, Plus, Eye, Edit, BarChart3, Trash2, Gift, TrendingUp, FileText, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -171,10 +170,63 @@ const TeacherDashboard = () => {
       <Header userRole={userRole} userName={userName} onRoleSwitch={handleRoleSwitch} />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg p-8 mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, Instructor!</h1>
-          <p className="text-purple-100">Manage your courses and track your teaching success</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Instructor Dashboard</h1>
+            <p className="text-muted-foreground">Manage your courses and track performance</p>
+          </div>
+          
+          <div className="flex space-x-2">
+            <Link to="/course-management">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Course
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Quick Navigation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Link to="/course-management">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <BookOpen className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                <h3 className="font-semibold">Courses</h3>
+                <p className="text-sm text-muted-foreground">Manage your courses</p>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link to="/quiz-management">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <FileText className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                <h3 className="font-semibold">Quizzes</h3>
+                <p className="text-sm text-muted-foreground">Create and manage quizzes</p>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link to="/payment-analytics">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <DollarSign className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                <h3 className="font-semibold">Analytics</h3>
+                <p className="text-sm text-muted-foreground">Track payments & revenue</p>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link to="/promo-codes">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Tag className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                <h3 className="font-semibold">Promo Codes</h3>
+                <p className="text-sm text-muted-foreground">Manage discount codes</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Stats Overview */}

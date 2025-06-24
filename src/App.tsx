@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,10 @@ import Signup from "./pages/Signup";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import Profile from "./pages/Profile";
 import Account from "./pages/Account";
+import CourseManagement from "./pages/CourseManagement";
+import QuizManagement from "./pages/QuizManagement";
+import PaymentAnalytics from "./pages/PaymentAnalytics";
+import PromoCodeManagement from "./pages/PromoCodeManagement";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +43,10 @@ const App = () => (
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+          <Route path="/course-management" element={<CourseManagement />} />
+          <Route path="/quiz-management" element={<QuizManagement />} />
+          <Route path="/payment-analytics" element={<PaymentAnalytics />} />
+          <Route path="/promo-codes" element={<PromoCodeManagement />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/account" element={<Account />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
