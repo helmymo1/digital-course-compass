@@ -2,14 +2,6 @@
   "version": 2,
   "builds": [
     {
-      "src": "vite.config.ts",
-      "use": "@vercel/vite",
-      "config": {
-        "project": ".",
-        "outputDirectory": "dist"
-      }
-    },
-    {
       "src": "server/server.js",
       "use": "@vercel/node"
     }
