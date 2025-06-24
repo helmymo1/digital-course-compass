@@ -22,6 +22,7 @@ import CourseManagement from "./pages/CourseManagement";
 import QuizManagement from "./pages/QuizManagement";
 import PaymentAnalytics from "./pages/PaymentAnalytics";
 import PromoCodeManagement from "./pages/PromoCodeManagement";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/course-management" element={<CourseManagement />} />
           <Route path="/quiz-management" element={<QuizManagement />} />
           <Route path="/payment-analytics" element={<PaymentAnalytics />} />
