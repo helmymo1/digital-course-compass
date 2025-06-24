@@ -16,5 +16,10 @@ const adminOnly = (req, res, next) => {
 
 // Admin routes for analytics
 router.get('/revenue-summary', protect, adminOnly, analyticsController.getRevenueSummary);
+router.get('/course-completion', protect, adminOnly, analyticsController.getCourseCompletionRates);
+router.get('/time-spent', protect, adminOnly, analyticsController.getTimeSpentAnalytics);
+router.get('/course-performance', protect, adminOnly, analyticsController.getCoursePerformanceMetrics);
+router.get('/student-engagement', protect, adminOnly, analyticsController.getStudentEngagementMetrics);
+router.get('/content-analytics', protect, adminOnly, analyticsController.getContentAnalytics);
 
 module.exports = router;

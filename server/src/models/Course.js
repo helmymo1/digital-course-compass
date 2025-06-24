@@ -30,38 +30,22 @@ const courseSchema = new mongoose.Schema({
     default: 0,
     min: [0, 'Price cannot be negative'],
   },
-  enrollments: [{
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    enrolledAt: {
-      type: Date,
-      default: Date.now,
-    },
-  }],
-  ratings: [{
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
-    },
-    review: {
-      type: String,
-      trim: true,
-    },
-    reviewedAt: {
-      type: Date,
-      default: Date.now,
-    },
-  }],
+  // enrollments array removed, use Enrollment collection
+  // ratings array removed, use CourseRating collection
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5,
+  },
+  totalRatings: {
+    type: Number,
+    default: 0,
+  },
+  // Consider adding:
+  // moduleOrder: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Module' }]
+  // thumbnailUrl: { type: String }
+  // tags: [String]
 }, { timestamps: true }); // `timestamps: true` will add `createdAt` and `updatedAt` fields
 
 // Index fields for better query performance
