@@ -24,6 +24,8 @@ import QuizManagement from "./pages/QuizManagement";
 import PaymentAnalytics from "./pages/PaymentAnalytics";
 import PromoCodeManagement from "./pages/PromoCodeManagement";
 import AdminDashboard from "./pages/AdminDashboard";
+import PasswordReset from "./pages/PasswordReset";
+import EmailVerification from "./pages/EmailVerification";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/password-reset" element={<PasswordReset />} />
+            <Route path="/verify-email/:token" element={<EmailVerification />} />
             <Route path="/payment/:courseId" element={<Payment />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/dashboard" element={<Dashboard />} />
