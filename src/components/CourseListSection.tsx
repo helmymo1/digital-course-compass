@@ -1,11 +1,12 @@
+
 import React from 'react';
-import CourseCard from '@/components/CourseCard'; // Assuming CourseCard props are compatible
-import { Course } from '@/pages/Courses'; // Reuse the Course type from Courses.tsx (or a shared types file)
+import CourseCard from '@/components/CourseCard';
+import { Course } from '@/types/course';
 
 interface CourseListSectionProps {
   title: string;
-  courses: Course[]; // Using the more detailed Course type
-  onViewDetails: (courseId: string) => void; // Callback for when a course card is clicked
+  courses: Course[];
+  onViewDetails: (courseId: string) => void;
   isLoading?: boolean;
   error?: Error | null;
   emptyStateMessage?: string;
@@ -24,7 +25,6 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
       <div className="py-8">
         <h2 className="text-2xl font-bold mb-6">{title}</h2>
         <p>Loading courses...</p>
-        {/* TODO: Add skeleton loaders for better UX */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
              <div key={i} className="animate-pulse bg-muted rounded-lg p-4 h-[300px]">
@@ -63,7 +63,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {courses.map(course => (
           <CourseCard
-            key={course.id || course._id} // Use _id if id is not explicitly mapped
+            key={course.id || course._id}
             id={course.id || course._id}
             title={course.title}
             instructor={typeof course.instructor === 'string' ? course.instructor : course.instructor.name}
@@ -74,7 +74,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
             totalStudents={course.totalStudents || course.enrollmentCount}
             duration={course.duration || (course.estimatedDurationHours ? `${course.estimatedDurationHours} hours` : 'N/A')}
             level={course.level}
-            category={course.category} // Pass category if CourseCard uses it
+            category={course.category}
             onViewDetails={onViewDetails}
           />
         ))}

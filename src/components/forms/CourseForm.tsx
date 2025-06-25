@@ -1,235 +1,369 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useForm, Controller } from 'react-hook-form';
 
-interface CourseFormData {
+interface CourseData {
   title: string;
   description: string;
+  shortDescription: string;
   category: string;
   level: string;
   price: number;
-  estimatedDuration: number;
-  thumbnail: string;
-  status: 'draft' | 'published';
+  originalPrice: number;
+  duration: string;
+  language: string;
+  prerequisites: string[];
+  learningOutcomes: string[];
+  tags: string[];
+  isPublished: boolean;
+  allowEnrollment: boolean;
+  maxStudents: number;
+  startDate: string;
+  endDate: string;
+  thumbnailUrl: string;
+  videoIntroUrl: string;
 }
 
 interface CourseFormProps {
-  initialData?: Partial<CourseFormData>;
-  onSubmit: (data: CourseFormData) => void;
+  initialData?: Partial<CourseData>;
+  onSubmit: (data: CourseData) => void;
   isLoading: boolean;
-  isEdit?: boolean;
+  mode: 'create' | 'edit';
 }
 
-const categories = [
-  'Programming',
-  'Design',
-  'Business',
-  'Marketing',
-  'Photography',
-  'Music',
-  'Language',
-  'Health & Fitness'
-];
-
-const levels = [
-  'Beginner',
-  'Intermediate', 
-  'Advanced',
-  'All Levels'
-];
-
-const CourseForm = ({ initialData, onSubmit, isLoading, isEdit = false }: CourseFormProps) => {
+const CourseForm = ({ initialData, onSubmit, isLoading, mode }: CourseFormProps) => {
   const { t } = useLanguage();
-  const { register, handleSubmit, control, formState: { errors } } = useForm<CourseFormData>({
-    defaultValues: initialData
+  const [formData, setFormData] = useState<CourseData>({
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    shortDescription: initialData?.shortDescription || '',
+    category: initialData?.category || '',
+    level: initialData?.level || 'beginner',
+    price: initialData?.price || 0,
+    originalPrice: initialData?.originalPrice || 0,
+    duration: initialData?.duration || '',
+    language: initialData?.language || 'english',
+    prerequisites: initialData?.prerequisites || [],
+    learningOutcomes: initialData?.learningOutcomes || [],
+    tags: initialData?.tags || [],
+    isPublished: initialData?.isPublished || false,
+    allowEnrollment: initialData?.allowEnrollment || true,
+    maxStudents: initialData?.maxStudents || 0,
+    startDate: initialData?.startDate || '',
+    endDate: initialData?.endDate || '',
+    thumbnailUrl: initialData?.thumbnailUrl || '',
+    videoIntroUrl: initialData?.videoIntroUrl || '',
   });
 
+  const [prerequisiteInput, setPrerequisiteInput] = useState('');
+  const [outcomeInput, setOutcomeInput] = useState('');
+  const [tagInput, setTagInput] = useState('');
+
+  const handleInputChange = (field: keyof CourseData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addPrerequisite = () => {
+    if (prerequisiteInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        prerequisites: [...prev.prerequisites, prerequisiteInput.trim()]
+      }));
+      setPrerequisiteInput('');
+    }
+  };
+
+  const removePrerequisite = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      prerequisites: prev.prerequisites.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addOutcome = () => {
+    if (outcomeInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        learningOutcomes: [...prev.learningOutcomes, outcomeInput.trim()]
+      }));
+      setOutcomeInput('');
+    }
+  };
+
+  const removeOutcome = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      learningOutcomes: prev.learningOutcomes.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addTag = () => {
+    if (tagInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()]
+      }));
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
   return (
-    <Card>
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>
-          {isEdit ? t('Edit Course', 'تعديل الدورة') : t('Create New Course', 'إنشاء دورة جديدة')}
+          {mode === 'create' ? t('Create New Course') : t('Edit Course')}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">{t('Course Title', 'عنوان الدورة')}</Label>
-            <Input
-              id="title"
-              placeholder={t('Enter course title', 'أدخل عنوان الدورة')}
-              {...register('title', { 
-                required: t('Course title is required', 'عنوان الدورة مطلوب'),
-                minLength: {
-                  value: 5,
-                  message: t('Title must be at least 5 characters', 'العنوان يجب أن يكون 5 أحرف على الأقل')
-                }
-              })}
-            />
-            {errors.title && (
-              <p className="text-sm text-destructive">{errors.title.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">{t('Description', 'الوصف')}</Label>
-            <Textarea
-              id="description"
-              placeholder={t('Describe your course...', 'اوصف دورتك...')}
-              rows={4}
-              {...register('description', { 
-                required: t('Description is required', 'الوصف مطلوب'),
-                minLength: {
-                  value: 20,
-                  message: t('Description must be at least 20 characters', 'الوصف يجب أن يكون 20 حرف على الأقل')
-                }
-              })}
-            />
-            {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('Basic Information')}</h3>
+            
             <div className="space-y-2">
-              <Label>{t('Category', 'الفئة')}</Label>
-              <Controller
-                name="category"
-                control={control}
-                rules={{ required: t('Please select a category', 'يرجى اختيار فئة') }}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('Select category', 'اختر الفئة')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.category && (
-                <p className="text-sm text-destructive">{errors.category.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('Level', 'المستوى')}</Label>
-              <Controller
-                name="level"
-                control={control}
-                rules={{ required: t('Please select a level', 'يرجى اختيار مستوى') }}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('Select level', 'اختر المستوى')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {levels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.level && (
-                <p className="text-sm text-destructive">{errors.level.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">{t('Price ($)', 'السعر ($)')}</Label>
+              <Label htmlFor="title">{t('Course Title')}</Label>
               <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                {...register('price', { 
-                  required: t('Price is required', 'السعر مطلوب'),
-                  min: {
-                    value: 0,
-                    message: t('Price cannot be negative', 'السعر لا يمكن أن يكون سالباً')
-                  }
-                })}
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                placeholder={t('Enter course title')}
+                required
               />
-              {errors.price && (
-                <p className="text-sm text-destructive">{errors.price.message}</p>
-              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="estimatedDuration">{t('Duration (hours)', 'المدة (ساعات)')}</Label>
-              <Input
-                id="estimatedDuration"
-                type="number"
-                min="0"
-                step="0.5"
-                {...register('estimatedDuration', { 
-                  required: t('Duration is required', 'المدة مطلوبة'),
-                  min: {
-                    value: 0.5,
-                    message: t('Duration must be at least 0.5 hours', 'المدة يجب أن تكون نصف ساعة على الأقل')
-                  }
-                })}
+              <Label htmlFor="shortDescription">{t('Short Description')}</Label>
+              <Textarea
+                id="shortDescription"
+                value={formData.shortDescription}
+                onChange={(e) => handleInputChange('shortDescription', e.target.value)}
+                placeholder={t('Brief description for course preview')}
+                rows={2}
               />
-              {errors.estimatedDuration && (
-                <p className="text-sm text-destructive">{errors.estimatedDuration.message}</p>
-              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">{t('Full Description')}</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder={t('Detailed course description')}
+                rows={6}
+                required
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="thumbnail">{t('Thumbnail URL', 'رابط الصورة المصغرة')}</Label>
-            <Input
-              id="thumbnail"
-              type="url"
-              placeholder="https://example.com/image.jpg"
-              {...register('thumbnail')}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t('Status', 'الحالة')}</Label>
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
+          {/* Course Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('Course Details')}</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">{t('Category')}</Label>
+                <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder={t('Select status', 'اختر الحالة')} />
+                    <SelectValue placeholder={t('Select category')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">{t('Draft', 'مسودة')}</SelectItem>
-                    <SelectItem value="published">{t('Published', 'منشور')}</SelectItem>
+                    <SelectItem value="programming">{t('Programming')}</SelectItem>
+                    <SelectItem value="design">{t('Design')}</SelectItem>
+                    <SelectItem value="business">{t('Business')}</SelectItem>
+                    <SelectItem value="marketing">{t('Marketing')}</SelectItem>
+                    <SelectItem value="language">{t('Language')}</SelectItem>
+                    <SelectItem value="other">{t('Other')}</SelectItem>
                   </SelectContent>
                 </Select>
-              )}
-            />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="level">{t('Level')}</Label>
+                <Select value={formData.level} onValueChange={(value) => handleInputChange('level', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">{t('Beginner')}</SelectItem>
+                    <SelectItem value="intermediate">{t('Intermediate')}</SelectItem>
+                    <SelectItem value="advanced">{t('Advanced')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">{t('Price')} ($)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="originalPrice">{t('Original Price')} ($)</Label>
+                <Input
+                  id="originalPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.originalPrice}
+                  onChange={(e) => handleInputChange('originalPrice', parseFloat(e.target.value) || 0)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="duration">{t('Duration')}</Label>
+                <Input
+                  id="duration"
+                  value={formData.duration}
+                  onChange={(e) => handleInputChange('duration', e.target.value)}
+                  placeholder={t('e.g., 10 weeks, 40 hours')}
+                />
+              </div>
+            </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading 
-              ? t('Saving...', 'جارٍ الحفظ...') 
-              : isEdit 
-                ? t('Update Course', 'تحديث الدورة')
-                : t('Create Course', 'إنشاء الدورة')
-            }
-          </Button>
+          {/* Prerequisites */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('Prerequisites')}</h3>
+            <div className="flex space-x-2">
+              <Input
+                value={prerequisiteInput}
+                onChange={(e) => setPrerequisiteInput(e.target.value)}
+                placeholder={t('Add a prerequisite')}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPrerequisite())}
+              />
+              <Button type="button" onClick={addPrerequisite}>
+                {t('Add')}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.prerequisites.map((prereq, index) => (
+                <div key={index} className="bg-muted px-3 py-1 rounded-md flex items-center space-x-2">
+                  <span>{prereq}</span>
+                  <button type="button" onClick={() => removePrerequisite(index)} className="text-red-500 hover:text-red-700">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Learning Outcomes */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('Learning Outcomes')}</h3>
+            <div className="flex space-x-2">
+              <Input
+                value={outcomeInput}
+                onChange={(e) => setOutcomeInput(e.target.value)}
+                placeholder={t('Add a learning outcome')}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addOutcome())}
+              />
+              <Button type="button" onClick={addOutcome}>
+                {t('Add')}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.learningOutcomes.map((outcome, index) => (
+                <div key={index} className="bg-muted px-3 py-1 rounded-md flex items-center space-x-2">
+                  <span>{outcome}</span>
+                  <button type="button" onClick={() => removeOutcome(index)} className="text-red-500 hover:text-red-700">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('Tags')}</h3>
+            <div className="flex space-x-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder={t('Add a tag')}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+              />
+              <Button type="button" onClick={addTag}>
+                {t('Add')}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.tags.map((tag, index) => (
+                <div key={index} className="bg-muted px-3 py-1 rounded-md flex items-center space-x-2">
+                  <span>{tag}</span>
+                  <button type="button" onClick={() => removeTag(index)} className="text-red-500 hover:text-red-700">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('Settings')}</h3>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isPublished"
+                  checked={formData.isPublished}
+                  onCheckedChange={(checked) => handleInputChange('isPublished', checked)}
+                />
+                <Label htmlFor="isPublished">{t('Publish Course')}</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="allowEnrollment"
+                  checked={formData.allowEnrollment}
+                  onCheckedChange={(checked) => handleInputChange('allowEnrollment', checked)}
+                />
+                <Label htmlFor="allowEnrollment">{t('Allow Enrollment')}</Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end space-x-2 pt-6">
+            <Button type="button" variant="outline" disabled={isLoading}>
+              {t('Cancel')}
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading 
+                ? t('Saving...') 
+                : mode === 'create' 
+                  ? t('Create Course') 
+                  : t('Update Course')
+              }
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

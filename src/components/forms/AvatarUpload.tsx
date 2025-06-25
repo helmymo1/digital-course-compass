@@ -23,19 +23,16 @@ const AvatarUpload = ({ currentAvatar, userName, onUpload, onRemove, isLoading }
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert(t('Please select an image file', 'يرجى اختيار ملف صورة'));
+      alert(t('Please select an image file'));
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert(t('File size must be less than 5MB', 'يجب أن يكون حجم الملف أقل من 5 ميجابايت'));
+      alert(t('File size must be less than 5MB'));
       return;
     }
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreview(e.target?.result as string);
@@ -58,7 +55,7 @@ const AvatarUpload = ({ currentAvatar, userName, onUpload, onRemove, isLoading }
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('Profile Picture', 'صورة الملف الشخصي')}</CardTitle>
+        <CardTitle>{t('Profile Picture')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center space-x-4 rtl:space-x-reverse">
@@ -79,7 +76,7 @@ const AvatarUpload = ({ currentAvatar, userName, onUpload, onRemove, isLoading }
                 disabled={isLoading}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {t('Upload', 'رفع')}
+                {t('Upload')}
               </Button>
               
               {displayAvatar && (
@@ -91,13 +88,13 @@ const AvatarUpload = ({ currentAvatar, userName, onUpload, onRemove, isLoading }
                   disabled={isLoading}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  {t('Remove', 'إزالة')}
+                  {t('Remove')}
                 </Button>
               )}
             </div>
             
             <p className="text-sm text-muted-foreground">
-              {t('Upload a photo up to 5MB', 'ارفع صورة بحد أقصى 5 ميجابايت')}
+              {t('Upload a photo up to 5MB')}
             </p>
           </div>
         </div>

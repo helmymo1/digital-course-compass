@@ -29,24 +29,24 @@ const PasswordResetForm = ({ onSubmit, isLoading }: PasswordResetFormProps) => {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">{t('Reset Password', 'إعادة تعيين كلمة المرور')}</CardTitle>
+        <CardTitle className="text-2xl">{t('Reset Password')}</CardTitle>
         <p className="text-muted-foreground">
-          {t('Enter your email to receive reset instructions', 'أدخل بريدك الإلكتروني لتلقي تعليمات إعادة التعيين')}
+          {t('Enter your email to receive reset instructions')}
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">{t('Email', 'البريد الإلكتروني')}</Label>
+            <Label htmlFor="email">{t('Email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder={t('Enter your email', 'أدخل بريدك الإلكتروني')}
+              placeholder={t('Enter your email')}
               {...register('email', {
-                required: t('Email is required', 'البريد الإلكتروني مطلوب'),
+                required: t('Email is required'),
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: t('Invalid email address', 'عنوان بريد إلكتروني غير صحيح')
+                  message: t('Invalid email address')
                 }
               })}
             />
@@ -57,14 +57,14 @@ const PasswordResetForm = ({ onSubmit, isLoading }: PasswordResetFormProps) => {
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             <Mail className="h-4 w-4 mr-2" />
-            {isLoading ? t('Sending...', 'جارٍ الإرسال...') : t('Send Reset Link', 'إرسال رابط إعادة التعيين')}
+            {isLoading ? t('Sending...') : t('Send Reset Link')}
           </Button>
         </form>
 
         <div className="text-center">
           <Link to="/login" className="inline-flex items-center text-sm text-primary hover:underline">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            {t('Back to Login', 'العودة لتسجيل الدخول')}
+            {t('Back to Login')}
           </Link>
         </div>
       </CardContent>
