@@ -26,64 +26,122 @@ const CourseDetails = () => {
   const { id } = useParams();
   const [selectedLesson, setSelectedLesson] = useState(0);
 
-  // Mock course data
-  const course = {
-    id: id || '1',
-    title: 'Complete Web Development Bootcamp',
-    instructor: 'John Smith',
-    price: 99,
-    originalPrice: 199,
-    image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop',
-    rating: 4.8,
-    totalStudents: 15420,
-    duration: '40 hours',
-    level: 'Beginner',
-    language: 'English',
-    lastUpdated: 'December 2024',
-    description: 'Master web development from scratch with this comprehensive bootcamp. Learn HTML, CSS, JavaScript, React, Node.js, and more.',
-    whatYouWillLearn: [
-      'Build responsive websites using HTML, CSS, and JavaScript',
-      'Create modern web applications with React',
-      'Develop backend APIs with Node.js and Express',
-      'Work with databases like MongoDB',
-      'Deploy applications to production',
-      'Use version control with Git and GitHub'
-    ],
-    requirements: [
-      'Basic computer skills',
-      'No prior programming experience required',
-      'A computer with internet connection',
-      'Willingness to learn and practice'
-    ],
-    curriculum: [
-      {
-        title: 'Introduction to Web Development',
-        lessons: [
-          { title: 'Course Introduction', duration: '5:24', isPreview: true, completed: false },
-          { title: 'Setting Up Your Development Environment', duration: '12:30', isPreview: false, completed: false },
-          { title: 'Understanding How the Web Works', duration: '8:45', isPreview: false, completed: false }
-        ]
-      },
-      {
-        title: 'HTML Fundamentals',
-        lessons: [
-          { title: 'HTML Basics and Structure', duration: '15:20', isPreview: true, completed: false },
-          { title: 'HTML Elements and Tags', duration: '18:15', isPreview: false, completed: false },
-          { title: 'Forms and Input Elements', duration: '22:10', isPreview: false, completed: false }
-        ]
-      },
-      {
-        title: 'CSS Styling',
-        lessons: [
-          { title: 'CSS Fundamentals', duration: '20:30', isPreview: false, completed: false },
-          { title: 'CSS Flexbox', duration: '25:45',
-
- isPreview: false, completed: false },
-          { title: 'CSS Grid Layout', duration: '30:20', isPreview: false, completed: false }
-        ]
-      }
-    ]
+  // Mock courses data with different courses
+  const coursesData = {
+    '1': {
+      id: '1',
+      title: 'Complete Web Development Bootcamp',
+      instructor: 'John Smith',
+      price: 99,
+      originalPrice: 199,
+      image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop',
+      rating: 4.8,
+      totalStudents: 15420,
+      duration: '40 hours',
+      level: 'Beginner',
+      language: 'English',
+      lastUpdated: 'December 2024',
+      description: 'Master web development from scratch with this comprehensive bootcamp. Learn HTML, CSS, JavaScript, React, Node.js, and more.',
+      whatYouWillLearn: [
+        'Build responsive websites using HTML, CSS, and JavaScript',
+        'Create modern web applications with React',
+        'Develop backend APIs with Node.js and Express',
+        'Work with databases like MongoDB',
+        'Deploy applications to production',
+        'Use version control with Git and GitHub'
+      ],
+      requirements: [
+        'Basic computer skills',
+        'No prior programming experience required',
+        'A computer with internet connection',
+        'Willingness to learn and practice'
+      ],
+      curriculum: [
+        {
+          title: 'Introduction to Web Development',
+          lessons: [
+            { title: 'Course Introduction', duration: '5:24', isPreview: true, completed: false },
+            { title: 'Setting Up Your Development Environment', duration: '12:30', isPreview: false, completed: false },
+            { title: 'Understanding How the Web Works', duration: '8:45', isPreview: false, completed: false }
+          ]
+        },
+        {
+          title: 'HTML Fundamentals',
+          lessons: [
+            { title: 'HTML Basics and Structure', duration: '15:20', isPreview: true, completed: false },
+            { title: 'HTML Elements and Tags', duration: '18:15', isPreview: false, completed: false },
+            { title: 'Forms and Input Elements', duration: '22:10', isPreview: false, completed: false }
+          ]
+        },
+        {
+          title: 'CSS Styling',
+          lessons: [
+            { title: 'CSS Fundamentals', duration: '20:30', isPreview: false, completed: false },
+            { title: 'CSS Flexbox', duration: '25:45', isPreview: false, completed: false },
+            { title: 'CSS Grid Layout', duration: '30:20', isPreview: false, completed: false }
+          ]
+        }
+      ]
+    },
+    '2': {
+      id: '2',
+      title: 'Advanced React & Node.js',
+      instructor: 'Sarah Johnson',
+      price: 129,
+      originalPrice: 199,
+      image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=800&h=400&fit=crop',
+      rating: 4.9,
+      totalStudents: 8930,
+      duration: '35 hours',
+      level: 'Advanced',
+      language: 'English',
+      lastUpdated: 'December 2024',
+      description: 'Master advanced React concepts and build scalable full-stack applications with Node.js. Perfect for developers wanting to level up their skills.',
+      whatYouWillLearn: [
+        'Advanced React patterns and hooks',
+        'State management with Redux Toolkit',
+        'Building RESTful APIs with Node.js and Express',
+        'Authentication and authorization',
+        'Testing React applications',
+        'Performance optimization techniques'
+      ],
+      requirements: [
+        'Solid understanding of JavaScript',
+        'Basic React knowledge required',
+        'Familiarity with Node.js basics',
+        'Experience with web development'
+      ],
+      curriculum: [
+        {
+          title: 'Advanced React Concepts',
+          lessons: [
+            { title: 'Course Overview', duration: '8:15', isPreview: true, completed: false },
+            { title: 'Custom Hooks Deep Dive', duration: '22:30', isPreview: false, completed: false },
+            { title: 'Context API and useReducer', duration: '18:45', isPreview: false, completed: false }
+          ]
+        },
+        {
+          title: 'State Management',
+          lessons: [
+            { title: 'Redux Toolkit Setup', duration: '15:20', isPreview: true, completed: false },
+            { title: 'RTK Query for API calls', duration: '28:15', isPreview: false, completed: false },
+            { title: 'Redux DevTools', duration: '12:10', isPreview: false, completed: false }
+          ]
+        },
+        {
+          title: 'Node.js Backend',
+          lessons: [
+            { title: 'Express.js Advanced Features', duration: '25:30', isPreview: false, completed: false },
+            { title: 'Database Integration', duration: '32:45', isPreview: false, completed: false },
+            { title: 'API Security Best Practices', duration: '20:20', isPreview: false, completed: false }
+          ]
+        }
+      ]
+    }
   };
+
+  // Get the course data based on ID, fallback to course 1 if not found
+  const course = coursesData[id as keyof typeof coursesData] || coursesData['1'];
 
   return (
     <div className="min-h-screen bg-background">
@@ -219,11 +277,13 @@ const CourseDetails = () => {
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
                       <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold">
-                        JS
+                        {course.instructor.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
                         <h3 className="text-xl font-bold mb-2">{course.instructor}</h3>
-                        <p className="text-muted-foreground mb-4">Senior Full Stack Developer & Instructor</p>
+                        <p className="text-muted-foreground mb-4">
+                          {course.id === '2' ? 'Senior React Developer & Technical Lead' : 'Senior Full Stack Developer & Instructor'}
+                        </p>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div className="flex items-center gap-2">
                             <Star className="h-4 w-4" />
@@ -231,16 +291,18 @@ const CourseDetails = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Award className="h-4 w-4" />
-                            <span>45,230 Students</span>
+                            <span>{course.id === '2' ? '28,450' : '45,230'} Students</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Play className="h-4 w-4" />
-                            <span>12 Courses</span>
+                            <span>{course.id === '2' ? '8' : '12'} Courses</span>
                           </div>
                         </div>
                         <p className="mt-4 text-sm">
-                          John is a seasoned developer with over 10 years of experience in web development. 
-                          He has worked with major tech companies and has taught thousands of students worldwide.
+                          {course.id === '2' 
+                            ? 'Sarah is a seasoned React developer with over 8 years of experience building scalable web applications. She has worked at several top tech companies and specializes in modern React patterns and Node.js backends.'
+                            : 'John is a seasoned developer with over 10 years of experience in web development. He has worked with major tech companies and has taught thousands of students worldwide.'
+                          }
                         </p>
                       </div>
                     </div>
@@ -273,8 +335,12 @@ const CourseDetails = () => {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-3xl font-bold">${course.price}</span>
-                        <span className="text-lg text-muted-foreground line-through">${course.originalPrice}</span>
-                        <Badge variant="secondary">50% OFF</Badge>
+                        {course.originalPrice && (
+                          <>
+                            <span className="text-lg text-muted-foreground line-through">${course.originalPrice}</span>
+                            <Badge variant="secondary">{Math.round((1 - course.price / course.originalPrice) * 100)}% OFF</Badge>
+                          </>
+                        )}
                       </div>
                       <p className="text-sm text-red-600 font-medium">2 days left at this price!</p>
                     </div>
