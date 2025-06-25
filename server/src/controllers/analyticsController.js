@@ -8,6 +8,7 @@ const CourseRating = require('../models/CourseRating');
 const ForumPost = require('../models/ForumPost'); // Added
 const StudentProgress = require('../models/StudentProgress'); // Added
 const Lesson = require('../models/Lesson'); // Added
+const SearchAnalytics = require('../models/SearchAnalytics'); // Added for search analytics
 const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 
@@ -221,4 +222,102 @@ exports.getContentAnalytics = asyncHandler(async (req, res) => {
     ]);
 
     res.status(200).json({ success: true, mostViewedLessons, lessonCompletionStats });
+});
+
+// --- Search Analytics ---
+
+// @desc    Get top search queries
+// @route   GET /api/v1/admin/analytics/search/top-queries
+// @access  Private/Admin
+exports.getTopSearchQueries = asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const { startDate, endDate } = req.query;
+
+    const matchStage = {};
+    if (startDate && endDate) {
+        matchStage.timestamp = { $gte: new Date(startDate), $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) };
+    }
+    matchStage.query = { $ne: null, $ne: "" }; // Only include actual search queries
+
+    const topQueries = await SearchAnalytics.aggregate([
+        { $match: matchStage },
+        { $group: { _id: { $toLower: '$query' }, count: { $sum: 1 }, latestTimestamp: { $max: '$timestamp' } } }, // Group by lowercase query to consolidate
+        { $sort: { count: -1, latestTimestamp: -1 } },
+        { $limit: limit },
+        { $project: { query: '$_id', count: 1, latestTimestamp: 1, _id: 0 } }
+    ]);
+    res.status(200).json({ success: true, data: topQueries });
+});
+
+// @desc    Get queries with no results
+// @route   GET /api/v1/admin/analytics/search/no-result-queries
+// @access  Private/Admin
+exports.getNoResultQueries = asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const { startDate, endDate } = req.query;
+
+    const matchStage = { resultsCount: 0 };
+    if (startDate && endDate) {
+        matchStage.timestamp = { $gte: new Date(startDate), $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) };
+    }
+    matchStage.query = { $ne: null, $ne: "" };
+
+    const noResultQueries = await SearchAnalytics.aggregate([
+        { $match: matchStage },
+        { $group: { _id: { $toLower: '$query' }, count: { $sum: 1 }, latestTimestamp: { $max: '$timestamp' } } },
+        { $sort: { count: -1, latestTimestamp: -1 } }, // Show most frequent no-result queries first
+        { $limit: limit },
+        { $project: { query: '$_id', countOfNoResultOccurrences: '$count', latestTimestamp: 1, _id: 0 } }
+    ]);
+    res.status(200).json({ success: true, data: noResultQueries });
+});
+
+// @desc    Get filter usage statistics
+// @route   GET /api/v1/admin/analytics/search/filter-usage
+// @access  Private/Admin
+exports.getFilterUsage = asyncHandler(async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const matchStage = { 'filtersApplied': { $exists: true, $ne: {} } }; // Only entries with filters
+     if (startDate && endDate) {
+        matchStage.timestamp = { $gte: new Date(startDate), $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) };
+    }
+
+    // This is a simplified example. True filter usage might require more complex aggregation
+    // if you want to count individual filter keys (e.g., how many times 'category' was used vs 'level')
+    // For now, let's get counts of common filter combinations or specific known filters.
+
+    // Example: Count usage of 'category' filter
+    const categoryFilterUsage = await SearchAnalytics.aggregate([
+        { $match: { ...matchStage, 'filtersApplied.category': { $exists: true } } },
+        { $group: { _id: '$filtersApplied.category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $project: { category: '$_id', count: 1, _id: 0 } }
+    ]);
+
+    // Example: Count usage of 'level' filter
+    const levelFilterUsage = await SearchAnalytics.aggregate([
+        { $match: { ...matchStage, 'filtersApplied.level': { $exists: true } } },
+        { $group: { _id: '$filtersApplied.level', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $project: { level: '$_id', count: 1, _id: 0 } }
+    ]);
+
+    // Example: Count usage of 'minRating' filter
+    const minRatingFilterUsage = await SearchAnalytics.aggregate([
+        { $match: { ...matchStage, 'filtersApplied.minRating': { $exists: true } } },
+        { $group: { _id: '$filtersApplied.minRating', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $project: { minRating: '$_id', count: 1, _id: 0 } }
+    ]);
+
+
+    res.status(200).json({
+        success: true,
+        data: {
+            categoryUsage: categoryFilterUsage,
+            levelUsage: levelFilterUsage,
+            minRatingUsage: minRatingFilterUsage,
+            // Add more specific filter usage stats as needed
+        }
+    });
 });

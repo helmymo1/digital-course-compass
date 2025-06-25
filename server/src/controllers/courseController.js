@@ -1,5 +1,8 @@
 const Course = require('../models/Course');
 const User = require('../models/User'); // Needed to check instructor role
+const SearchAnalytics = require('../models/SearchAnalytics'); // Added SearchAnalytics
+const recommendationService = require('../services/recommendationService'); // Added recommendationService
+const asyncHandler = require('express-async-handler'); // For async route handlers
 
 // @desc    Create a new course
 // @route   POST /api/courses
@@ -46,11 +49,46 @@ exports.createCourse = async (req, res) => {
 // @access  Public (with filtering for published courses for students)
 exports.getAllCourses = async (req, res) => {
   try {
-    const { category, status, instructor, sortBy, order = 'asc', page = 1, limit = 10 } = req.query;
+    const {
+      category, status, instructor,
+      sortBy, order = 'asc',
+      page = 1, limit = 10,
+      search,
+      level, minRating, minDuration, maxDuration // New filters
+    } = req.query;
     const query = {};
+
+    if (search) {
+      query.$text = { $search: search };
+    }
 
     if (category) {
       query.category = category;
+    }
+
+    if (level) {
+      query.level = level;
+    }
+
+    if (minRating) {
+      const rating = parseFloat(minRating);
+      if (!isNaN(rating)) {
+        query.averageRating = { $gte: rating };
+      }
+    }
+
+    if (minDuration) {
+      const duration = parseFloat(minDuration);
+      if (!isNaN(duration)) {
+        query.estimatedDurationHours = { ...query.estimatedDurationHours, $gte: duration };
+      }
+    }
+
+    if (maxDuration) {
+      const duration = parseFloat(maxDuration);
+      if (!isNaN(duration)) {
+        query.estimatedDurationHours = { ...query.estimatedDurationHours, $lte: duration };
+      }
     }
 
     // By default, non-authenticated or student users should only see 'published' courses.
@@ -93,6 +131,21 @@ exports.getAllCourses = async (req, res) => {
         totalPages: Math.ceil(totalCourses / limitNum),
         totalCourses
     });
+
+    // Log search analytics if search term or significant filters were used
+    const appliedFiltersForAnalytics = { category, status, instructor, level, minRating, minDuration, maxDuration };
+    // Remove undefined keys to keep analytics data clean
+    Object.keys(appliedFiltersForAnalytics).forEach(key => appliedFiltersForAnalytics[key] === undefined && delete appliedFiltersForAnalytics[key]);
+
+    if (search || Object.keys(appliedFiltersForAnalytics).length > 0) {
+      SearchAnalytics.create({
+        query: search || null,
+        userId: req.user ? req.user.id : null,
+        filtersApplied: appliedFiltersForAnalytics,
+        resultsCount: totalCourses,
+      }).catch(err => console.error('Failed to log search analytics:', err)); // Fire and forget
+    }
+
   } catch (error) {
     console.error('Error fetching courses:', error);
     res.status(500).json({ message: 'Server error while fetching courses.' });
@@ -307,3 +360,50 @@ exports.addCourseReview = async (req, res) => {
     res.status(500).json({ message: 'Server error while adding review.' });
   }
 };
+
+// @desc    Get course recommendations
+// @route   GET /api/courses/:id/recommendations
+// @route   GET /api/courses/recommendations/me (for personalized based on user)
+// @access  Public / Private (for /me)
+exports.getCourseRecommendations = asyncHandler(async (req, res) => {
+  const courseId = req.params.id; // For "users who took this also took..."
+  const userId = req.user ? req.user.id : null; // For personalized "based on your activity"
+
+  let recommendations = [];
+  const limit = parseInt(req.query.limit) || 5;
+
+  if (courseId) {
+    // Strategy 1: Users who enrolled in this course also enrolled in...
+    recommendations = await recommendationService.getRecommendationsBasedOnCourseEnrollments(courseId, userId, limit);
+  } else if (userId && req.path.endsWith('/me')) { // Check if it's the /me route
+    // Strategy 2: Based on categories of courses the current user is enrolled in
+    recommendations = await recommendationService.getRecommendationsBasedOnUserCategories(userId, limit);
+  } else {
+    // Fallback or general recommendations (e.g., top popular courses if no specific context)
+    // For now, if no specific context, return empty or could fetch top popular courses
+    // recommendations = await Course.find({ status: 'published' }).sort({ enrollmentCount: -1 }).limit(limit);
+  }
+
+  if (!recommendations || recommendations.length === 0) {
+    // If no specific recommendations found, could fallback to general popular courses
+    // For now, let's indicate no specific recommendations found.
+    // Or, fetch some popular ones as a generic fallback:
+    // recommendations = await Course.find({ status: 'published' }).sort({ enrollmentCount: -1 }).limit(limit).select('-description');
+  }
+
+  // If still no recommendations (e.g. user has no enrollments for category based),
+  // and we want to ensure some are always returned, fetch general popular ones.
+  if (recommendations.length === 0) {
+      recommendations = await Course.find({ status: 'published', _id: { $ne: courseId } }) // Exclude current course if courseId was given
+                                  .sort({ enrollmentCount: -1, averageRating: -1 })
+                                  .limit(limit)
+                                  .select('-description -modules'); // Example: exclude heavy fields
+  }
+
+
+  res.status(200).json({
+    success: true,
+    count: recommendations.length,
+    data: recommendations,
+  });
+});

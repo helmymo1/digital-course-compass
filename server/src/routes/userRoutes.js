@@ -1,5 +1,6 @@
 const express = require('express');
 const userController = require('../controllers/userController');
+const badgeController = require('../controllers/badgeController'); // Added badgeController
 const { getUserQuizAttempts } = require('../controllers/quizController'); // Import quiz controller function
 const { getMyLearningPaths } = require('../controllers/learningPathController'); // Import learning path controller
 const authMiddleware = require('../middleware/authMiddleware');
@@ -10,6 +11,7 @@ const router = express.Router();
 router.use(authMiddleware.protect); // Protect all user routes
 
 router.get('/me', userController.getMe);
+router.get('/me/streak', userController.getUserStreak);
 // router.patch('/updateMe', userController.updateMe); // Example for future
 // router.patch('/updateMyPassword', authController.updatePassword); // This typically would be in authController
 
@@ -24,6 +26,9 @@ router.get('/:userId/quiz-attempts', authMiddleware.checkRole(['Admin']), getUse
 
 // Get all learning paths for the logged-in user
 router.get('/me/learning-paths', getMyLearningPaths); // Controller uses req.user.id
+
+// Get logged-in user's earned badges
+router.get('/me/badges', badgeController.getMyEarnedBadges);
 
 
 module.exports = router;

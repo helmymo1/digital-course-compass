@@ -44,6 +44,27 @@ const userSchema = new mongoose.Schema({
     // unique: true, // Optional: if you want to ensure it's unique, though Stripe IDs are inherently unique
     // sparse: true, // Optional: if using unique, use sparse for users who don't have one yet
   },
+  currentStreak: {
+    type: Number,
+    default: 0,
+  },
+  longestStreak: {
+    type: Number,
+    default: 0,
+  },
+  lastActivityDate: {
+    type: Date,
+  },
+  badgesEarned: [{
+    badge: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Badge'
+    },
+    earnedAt: {
+        type: Date,
+        default: Date.now
+    }
+  }],
 }, { timestamps: true });
 
 // Pre-save hook to hash password before saving

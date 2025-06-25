@@ -43,6 +43,11 @@ exports.enrollInCourse = async (req, res) => {
 
     const enrollment = await Enrollment.create(enrollmentData);
 
+    if (enrollment.status === 'active') {
+        // Increment enrollment count on the course
+        await Course.findByIdAndUpdate(courseId, { $inc: { enrollmentCount: 1 } });
+    }
+
     res.status(201).json({
       success: true,
       data: enrollment,
@@ -133,17 +138,24 @@ exports.updateEnrollmentStatus = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid status value.'});
     }
 
-    const enrollment = await Enrollment.findByIdAndUpdate(req.params.enrollmentId, { status }, {
-      new: true,
-      runValidators: true,
-    });
+    const enrollmentToUpdate = await Enrollment.findById(req.params.enrollmentId);
 
-    if (!enrollment) {
+    if (!enrollmentToUpdate) {
       return res.status(404).json({ success: false, message: 'Enrollment not found' });
     }
+
+    const oldStatus = enrollmentToUpdate.status;
+    enrollmentToUpdate.status = status;
+    const updatedEnrollment = await enrollmentToUpdate.save();
+
+    // If status changed from a non-active state to 'active'
+    if (oldStatus !== 'active' && updatedEnrollment.status === 'active') {
+        await Course.findByIdAndUpdate(updatedEnrollment.course, { $inc: { enrollmentCount: 1 } });
+    }
+
     res.status(200).json({
       success: true,
-      data: enrollment,
+      data: updatedEnrollment,
     });
   } catch (error) {
     console.error('Update Enrollment Status Error:', error);

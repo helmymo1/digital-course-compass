@@ -23,6 +23,15 @@ const enrollmentSchema = new mongoose.Schema({
   paymentId: { // To store Stripe Payment Intent ID or Charge ID
     type: String,
   },
+  overallProgressPercentage: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100,
+  },
+  completedAt: {
+    type: Date,
+  },
   // Mongoose automatically adds createdAt and updatedAt if timestamps is true
 }, { timestamps: true });
 

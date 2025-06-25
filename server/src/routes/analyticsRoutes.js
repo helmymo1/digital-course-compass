@@ -22,4 +22,10 @@ router.get('/course-performance', protect, adminOnly, analyticsController.getCou
 router.get('/student-engagement', protect, adminOnly, analyticsController.getStudentEngagementMetrics);
 router.get('/content-analytics', protect, adminOnly, analyticsController.getContentAnalytics);
 
+// Search Analytics Routes
+router.get('/search/top-queries', protect, adminOnly, analyticsController.getTopSearchQueries);
+router.get('/search/no-result-queries', protect, adminOnly, analyticsController.getNoResultQueries);
+router.get('/search/filter-usage', protect, adminOnly, analyticsController.getFilterUsage);
+
+
 module.exports = router;
