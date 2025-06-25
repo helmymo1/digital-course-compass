@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,7 @@ interface ContentEditorComponentProps {
 const fetchContentDetails = async (id: string) => {
   console.log(`Fetching content details for ${id}`);
   await new Promise(resolve => setTimeout(resolve, 500));
-  // Replace with: const response = await fetch(`/api/v1/content/${id}`);
+  // Replace with: const response = await fetch('/api/v1/content/' + id);
   // const data = await response.json();
   // return data;
   return {
@@ -40,7 +41,7 @@ const fetchContentDetails = async (id: string) => {
 
 const saveContentApi = async (contentData: any, id?: string | null) => {
   const method = id ? 'PUT' : 'POST';
-  const endpoint = id ? `/api/v1/content/${id}` : '/api/v1/content`;
+  const endpoint = id ? '/api/v1/content/' + id : '/api/v1/content';
   console.log(`Saving content to ${endpoint} with method ${method}`, contentData);
   await new Promise(resolve => setTimeout(resolve, 700));
   // Replace with:
