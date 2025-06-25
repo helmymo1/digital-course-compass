@@ -1,0 +1,61 @@
+# prometheus.yml (example configuration)
+
+# Global settings
+global:
+  scrape_interval: 15s # How frequently to scrape targets by default.
+  evaluation_interval: 15s # How frequently to evaluate rules.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration (optional, for sending alerts)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           # - alertmanager:9093 # Uncomment if you have Alertmanager running
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+# rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+      - targets: ['localhost:9090'] # Prometheus server itself
+
+  # Example job for scraping a Flask application instrumented with prometheus_client
+  # This assumes the 'app_with_metrics.py' example is running and exposing /metrics.
+  - job_name: 'my_flask_app'
+    static_configs:
+      - targets: ['localhost:5000'] # Default port for the example app_with_metrics.py
+        # If your application runs on a different host or port, change this.
+        # For multiple instances, consider service discovery mechanisms (e.g., Consul, Kubernetes).
+        # labels:
+        #   instance: 'app-instance-1' # Optional: add custom labels
+
+  # Example job for scraping node_exporter for system metrics
+  # You would need to have node_exporter installed and running on the target machines.
+  # - job_name: 'node_exporter'
+  #   static_configs:
+  #     - targets: ['localhost:9100'] # Default port for node_exporter
+        # Add more targets for other servers:
+        # - 'server1_ip:9100'
+        # - 'server2_ip:9100'
+
+  # Example job for scraping a database exporter (e.g., pg_exporter for PostgreSQL)
+  # - job_name: 'postgres_exporter'
+  #   static_configs:
+  #     - targets: ['your_postgres_exporter_host:9187'] # Default port for pg_exporter
+
+# To run Prometheus with this configuration:
+# prometheus --config.file=prometheus_example.yml
+
+# Notes:
+# - Replace 'localhost' with actual hostnames or IPs if Prometheus and targets are on different machines.
+# - For production, use service discovery rather than static_configs where possible.
+# - Ensure network connectivity and firewalls allow Prometheus to reach the scrape targets on their /metrics endpoints.

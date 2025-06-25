@@ -1,0 +1,107 @@
+# prometheus_alert_rules.yml
+# This file contains example alert rules for Prometheus.
+# These rules would typically be loaded by a Prometheus server, which then
+# sends firing alerts to a configured Alertmanager instance.
+
+groups:
+- name: application_performance_alerts
+  rules:
+  # --- Alert for High HTTP 5xx Error Rate ---
+  # This rule triggers if the percentage of HTTP 5xx responses for any job/endpoint
+  # exceeds 5% over a 5-minute window, and persists for 5 minutes.
+  - alert: HighHttp5xxErrorRate
+    expr: (sum(rate(myflaskapp_requests_total{status_code=~"5.."}[5m])) by (job, endpoint) / sum(rate(myflaskapp_requests_total[5m])) by (job, endpoint)) * 100 > 5
+    for: 5m # Duration the condition must be true before firing
+    labels:
+      severity: critical       # Severity label for routing in Alertmanager
+      service: my-flask-app    # Identifies the affected service
+    annotations:
+      summary: "High HTTP 5xx Error Rate on {{ $labels.job }} (endpoint: {{ $labels.endpoint }})"
+      description: "More than 5% of requests to {{ $labels.endpoint }} (job: {{ $labels.job }}) are returning 5xx errors over the last 5 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+      dashboard_link: "http://your-grafana-instance/d/your_dashboard_id?var-job={{ $labels.job }}&var-endpoint={{ $labels.endpoint }}" # Example link
+
+  # --- Alert for High Request Latency (P95) ---
+  # This rule triggers if the 95th percentile request latency for any job/endpoint
+  # exceeds 1 second over a 5-minute window, and persists for 5 minutes.
+  # Assumes 'myflaskapp_request_latency_seconds' is a Prometheus Histogram.
+  - alert: HighRequestLatencyP95
+    expr: histogram_quantile(0.95, sum(rate(myflaskapp_request_latency_seconds_bucket[5m])) by (le, job, endpoint)) > 1.0
+    for: 5m
+    labels:
+      severity: warning
+      service: my-flask-app
+    annotations:
+      summary: "High P95 Request Latency on {{ $labels.job }} (endpoint: {{ $labels.endpoint }})"
+      description: "The 95th percentile request latency for {{ $labels.endpoint }} (job: {{ $labels.job }}) is over 1 second for the last 5 minutes. Current value: {{ $value | printf \"%.2f\" }}s."
+      dashboard_link: "http://your-grafana-instance/d/your_dashboard_id?var-job={{ $labels.job }}&var-endpoint={{ $labels.endpoint }}"
+
+  # --- Alert for Service Instance Down (Prometheus Scrape Failed) ---
+  # This rule triggers if Prometheus fails to scrape the /metrics endpoint of an instance
+  # for the 'my_flask_app' job for more than 2 minutes.
+  - alert: ServiceInstanceDown
+    expr: up{job="my_flask_app"} == 0
+    for: 2m
+    labels:
+      severity: critical
+      service: my-flask-app
+    annotations:
+      summary: "Service instance {{ $labels.instance }} for job 'my_flask_app' is down."
+      description: "Prometheus could not scrape metrics from {{ $labels.instance }} (job: {{ $labels.job }}) for over 2 minutes. The instance may be offline or the metrics endpoint is failing."
+
+- name: system_resource_alerts # Assuming metrics from node_exporter
+  rules:
+  # --- Alert for High CPU Utilization ---
+  # Triggers if average CPU idle time is less than 10% (i.e., >90% utilization)
+  # across all CPUs on an instance for 10 minutes.
+  - alert: HighCpuUtilization
+    expr: avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100 < 10
+    for: 10m
+    labels:
+      severity: warning
+      component: system
+    annotations:
+      summary: "High CPU utilization on {{ $labels.instance }}"
+      description: "{{ $labels.instance }} CPU utilization has been over 90% (idle < 10%) for the last 10 minutes. Current idle value: {{ $value | printf \"%.2f\" }}%."
+      # You might want to add a link to a host-specific dashboard here.
+
+  # --- Alert for Low Free Disk Space ---
+  # Triggers if free disk space on the root mount point ('/') is less than 10%
+  # for 5 minutes.
+  - alert: LowFreeDiskSpace
+    expr: node_filesystem_free_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100 < 10
+    for: 5m
+    labels:
+      severity: critical
+      component: system
+    annotations:
+      summary: "Low free disk space on {{ $labels.instance }} at {{ $labels.mountpoint }}"
+      description: "{{ $labels.instance }} has less than 10% free disk space on {{ $labels.mountpoint }}. Current value: {{ $value | printf \"%.2f\" }}% free."
+
+  # --- Alert for Low Available Memory ---
+  # Triggers if available memory (node_memory_MemAvailable_bytes) is less than 500MB.
+  # 'MemAvailable' is generally preferred over 'MemFree'.
+  - alert: LowAvailableMemory
+    expr: node_memory_MemAvailable_bytes / (1024*1024) < 500 # Available memory < 500 MB
+    for: 10m
+    labels:
+      severity: warning
+      component: system
+    annotations:
+      summary: "Low available memory on {{ $labels.instance }}"
+      description: "{{ $labels.instance }} has less than 500MB of available memory for the last 10 minutes. Current value: {{ $value | printf \"%.0f\" }}MB."
+
+# How to use these rules with Prometheus:
+# 1. Ensure your Prometheus server is running.
+# 2. In your main prometheus.yml configuration file, add a 'rule_files' section:
+#    rule_files:
+#      - "/path/to/this/prometheus_alert_rules.yml"
+#      # - "another_rules_file.yml"
+# 3. Restart or reload your Prometheus server.
+# 4. Configure Prometheus to send alerts to an Alertmanager instance.
+#    In prometheus.yml:
+#    alerting:
+#      alertmanagers:
+#      - static_configs:
+#        - targets: ['localhost:9093'] # Default Alertmanager port. Replace if different.
+# 5. Ensure Alertmanager is running and configured with receivers (e.g., Slack, PagerDuty, email).
+```
