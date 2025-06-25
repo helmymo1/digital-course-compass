@@ -35,6 +35,8 @@ const feedbackRoutes = require('./routes/feedbackRoutes'); // Import feedback ro
 const forumPostRoutes = require('./routes/forumPostRoutes'); // Import forum post routes
 const badgeRoutes = require('./routes/badgeRoutes'); // Import badge routes
 const contentRoutes = require('./routes/contentRoutes'); // Import content routes
+const integrationRoutes = require('./routes/integrationRoutes'); // Import integration routes
+const integrationRoutes = require('./routes/integrationRoutes'); // Import integration routes
 
 // Mount Routers
 // Ensure your API base path is consistent. If it's /api/v1, it should be used here.
@@ -59,6 +61,7 @@ app.use('/api/v1/user-learning-paths', userLearningPathRoutes); // Mount user le
 app.use('/api/v1/feedback', feedbackRoutes); // Mount feedback routes
 app.use('/api/v1/forum-posts', forumPostRoutes); // Mount forum post routes
 app.use('/api/v1/badges', badgeRoutes); // Mount badge routes
+app.use('/api/v1/integrations', integrationRoutes); // Mount integration routes
 
 // Basic Route
 app.get('/', (req, res) => {
