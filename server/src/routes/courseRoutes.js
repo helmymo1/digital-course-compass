@@ -11,6 +11,7 @@ const {
   enrollCourse,
   addCourseReview,
   getCourseReviews,
+  getCourseRecommendations, // Added getCourseRecommendations
 } = require('../controllers/courseController');
 const { createModule, getModulesByCourse } = require('../controllers/moduleController'); // Import module controllers
 const { getCourseProgress } = require('../controllers/studentProgressController'); // Import progress controller
@@ -118,6 +119,12 @@ router.route('/:courseId/modules')
 // It expects req.params.courseId
 router.route('/:courseId/progress')
     .get(protect, getCourseProgress); // protect ensures user is logged in. Controller does further auth.
+
+// --- Routes for Course Recommendations ---
+// Personalized recommendations for the logged-in user (must be *before* /:id/recommendations to match correctly)
+router.get('/recommendations/me', protect, getCourseRecommendations); // `protect` ensures req.user exists
+// Recommendations based on a specific course
+router.get('/:id/recommendations', getCourseRecommendations); // :id will be courseId for this context
 
 
 module.exports = router;

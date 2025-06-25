@@ -33,6 +33,7 @@ const learningPathRoutes = require('./routes/learningPathRoutes'); // Import lea
 const userLearningPathRoutes = require('./routes/userLearningPathRoutes'); // Import user learning path routes
 const feedbackRoutes = require('./routes/feedbackRoutes'); // Import feedback routes
 const forumPostRoutes = require('./routes/forumPostRoutes'); // Import forum post routes
+const badgeRoutes = require('./routes/badgeRoutes'); // Import badge routes
 
 // Mount Routers
 // Ensure your API base path is consistent. If it's /api/v1, it should be used here.
@@ -56,6 +57,7 @@ app.use('/api/v1/learning-paths', learningPathRoutes); // Mount learning path ro
 app.use('/api/v1/user-learning-paths', userLearningPathRoutes); // Mount user learning path routes
 app.use('/api/v1/feedback', feedbackRoutes); // Mount feedback routes
 app.use('/api/v1/forum-posts', forumPostRoutes); // Mount forum post routes
+app.use('/api/v1/badges', badgeRoutes); // Mount badge routes
 
 // Basic Route
 app.get('/', (req, res) => {

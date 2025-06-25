@@ -3,6 +3,8 @@ const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const asyncHandler = require('express-async-handler');
+const userActivityService = require('../services/userActivityService');
+const badgeService = require('../services/badgeService'); // Added badgeService
 
 // @desc    Update or Create student progress for a lesson
 // @route   POST /api/v1/progress/lessons/:lessonId
@@ -64,8 +66,16 @@ exports.updateLessonProgress = asyncHandler(async (req, res) => {
     // Optional: After updating lesson progress, recalculate overall course progress for this user
     // and update Enrollment.overallProgressPercentage and Enrollment.status if completed.
     // This can be a separate utility function.
-    // await updateOverallCourseProgress(userId, lesson.course);
+    await updateOverallCourseProgress(userId, lesson.course);
 
+    // If the lesson was completed as part of this update, try to update user's learning streak
+    if (updatedProgress.completed) {
+        // Intentionally not awaiting this, to not slow down the response to the user for progress update.
+        // Streak update can happen in the background.
+        userActivityService.updateStreak(userId).catch(err => {
+            console.error(`Failed to update streak for user ${userId} after lesson completion:`, err);
+        });
+    }
 
     res.status(200).json(updatedProgress);
 });
@@ -186,9 +196,94 @@ async function updateOverallCourseProgress(userId, courseId) {
         if (overallPercentage === 100 && enrollment.status !== 'completed') {
             enrollment.status = 'completed';
             enrollment.completedAt = Date.now();
+            await enrollment.save(); // Save enrollment first
+
+            // After course is marked completed, check for course completion badges
+            badgeService.checkAndAwardBadges(userId, 'COURSE_COMPLETED', { courseId })
+                .catch(err => console.error(`Badge check failed for COURSE_COMPLETED (${courseId}) for user ${userId}:`, err));
+        } else {
+            // Still save if only percentage changed but not status to completed
+            await enrollment.save();
         }
-        await enrollment.save();
     }
 }
 // Add this to exports if you want to call it from elsewhere, or integrate its logic directly
 // exports.updateOverallCourseProgress = updateOverallCourseProgress;
+
+// @desc    Export student's progress for all enrolled courses
+// @route   GET /api/v1/progress/export
+// @access  Private/Student
+exports.exportProgress = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+
+    // Fetch all active or completed enrollments for the user
+    const enrollments = await Enrollment.find({ user: userId, status: { $in: ['active', 'completed'] } })
+        .populate('course', 'title'); // Populate course title
+
+    if (!enrollments || enrollments.length === 0) {
+        return res.status(404).json({ message: 'No enrollments found for this user to export progress.' });
+    }
+
+    const progressData = [];
+
+    for (const enrollment of enrollments) {
+        if (!enrollment.course) continue; // Should not happen if populate worked and course exists
+
+        // Get all lesson progress for this course
+        const lessonProgressEntries = await StudentProgress.find({ user: userId, course: enrollment.course._id })
+            .populate('lesson', 'title'); // Populate lesson title
+
+        if (lessonProgressEntries.length > 0) {
+            for (const lp of lessonProgressEntries) {
+                if (!lp.lesson) continue;
+                progressData.push({
+                    'Course Title': enrollment.course.title,
+                    'Lesson Title': lp.lesson.title,
+                    'Status': lp.completed ? 'Completed' : 'In Progress',
+                    'Progress Percentage': lp.progressPercentage,
+                    'Last Accessed': lp.lastAccessedAt ? new Date(lp.lastAccessedAt).toLocaleDateString() : 'N/A',
+                    'Overall Course Progress (%)': enrollment.overallProgressPercentage,
+                    'Course Completed': enrollment.status === 'completed' ? 'Yes' : 'No',
+                });
+            }
+        } else {
+            // If no specific lesson progress, still list the course
+            progressData.push({
+                'Course Title': enrollment.course.title,
+                'Lesson Title': 'N/A (No lessons started or course has no lessons)',
+                'Status': 'N/A',
+                'Progress Percentage': 'N/A',
+                'Last Accessed': 'N/A',
+                'Overall Course Progress (%)': enrollment.overallProgressPercentage,
+                'Course Completed': enrollment.status === 'completed' ? 'Yes' : 'No',
+            });
+        }
+    }
+
+    if (progressData.length === 0) {
+        // This might happen if enrolled courses have no lessons or no progress tracked yet in a way that populates here
+        return res.status(404).json({ message: 'No progress data available to export.' });
+    }
+
+    try {
+        const { Parser } = require('json2csv');
+        const fields = [
+            'Course Title',
+            'Lesson Title',
+            'Status',
+            'Progress Percentage',
+            'Last Accessed',
+            'Overall Course Progress (%)',
+            'Course Completed'
+        ];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(progressData);
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('my_progress.csv');
+        res.status(200).send(csv);
+    } catch (err) {
+        console.error('Error generating CSV for progress export:', err);
+        res.status(500).json({ message: 'Failed to export progress data.' });
+    }
+});

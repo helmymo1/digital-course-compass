@@ -42,6 +42,20 @@ const courseSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  level: { // Added level
+    type: String,
+    enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels'],
+    default: 'All Levels',
+  },
+  estimatedDurationHours: { // Added estimatedDurationHours
+    type: Number,
+    min: [0, 'Duration cannot be negative'],
+  },
+  enrollmentCount: { // Added enrollmentCount
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   // Consider adding:
   // moduleOrder: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Module' }]
   // thumbnailUrl: { type: String }

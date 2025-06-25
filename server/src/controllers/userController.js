@@ -33,3 +33,29 @@ exports.getMe = async (req, res) => {
 // exports.updateMe = async (req, res) => {
 //   // ... implementation ...
 // };
+
+exports.getUserStreak = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Not authorized. No user data found.' });
+    }
+
+    const user = await User.findById(req.user.id).select('currentStreak longestStreak lastActivityDate');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        currentStreak: user.currentStreak,
+        longestStreak: user.longestStreak,
+        lastActivityDate: user.lastActivityDate,
+      },
+    });
+  } catch (error) {
+    console.error('GetUserStreak Error:', error);
+    res.status(500).json({ message: 'Error retrieving user streak data.' });
+  }
+};
