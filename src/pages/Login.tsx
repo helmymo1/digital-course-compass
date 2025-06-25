@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import LoginForm from '@/components/LoginForm';
 import Modal from '@/components/Modal';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Login = () => {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'success' | 'error'>('success');

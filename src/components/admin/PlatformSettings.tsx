@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Settings } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PlatformSettings = () => {
+  const { t } = useLanguage();
   const [settings, setSettings] = useState({
     platformName: 'EduPlatform',
     enableRegistration: true,

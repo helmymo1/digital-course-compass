@@ -10,8 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, FileText, Users, Trophy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const QuizManagement = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [quizzes, setQuizzes] = useState([
     {

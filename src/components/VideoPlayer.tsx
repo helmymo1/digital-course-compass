@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface VideoPlayerProps {
   title: string;
@@ -11,6 +12,7 @@ interface VideoPlayerProps {
 }
 
 const VideoPlayer = ({ title, videoUrl, thumbnail }: VideoPlayerProps) => {
+  const { t } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState([0]);

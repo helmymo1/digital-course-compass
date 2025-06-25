@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Mail, User, Lock, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Signup = () => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',

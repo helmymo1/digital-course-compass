@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProgressBarProps {
   percentage: number;

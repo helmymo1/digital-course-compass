@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Shield, Bell, CreditCard, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Account = () => {
+  const { t } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

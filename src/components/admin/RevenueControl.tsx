@@ -9,8 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Settings, Edit } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const RevenueControl = () => {
+  const { t } = useLanguage();
   const [platformFee, setPlatformFee] = useState(20);
   const [teacherShare, setTeacherShare] = useState(80);
   const [autoApproval, setAutoApproval] = useState(true);

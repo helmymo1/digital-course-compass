@@ -13,8 +13,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BookOpen, Users, DollarSign, Plus, Eye, Edit, BarChart3, Trash2, Gift, TrendingUp, FileText, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const TeacherDashboard = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<'student' | 'teacher'>('teacher');

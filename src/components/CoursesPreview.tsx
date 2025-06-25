@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import CourseCard from '@/components/CourseCard';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CoursesPreview = () => {
+  const { t } = useLanguage();
   const featuredCourses = [
     {
       id: '1',

@@ -19,8 +19,10 @@ import {
   Globe
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CourseDetails = () => {
+  const { t } = useLanguage();
   const { id } = useParams();
   const [selectedLesson, setSelectedLesson] = useState(0);
 
