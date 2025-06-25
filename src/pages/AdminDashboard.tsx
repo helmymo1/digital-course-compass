@@ -8,6 +8,8 @@ import UserManagement from '@/components/admin/UserManagement';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import RevenueControl from '@/components/admin/RevenueControl';
 import PlatformSettings from '@/components/admin/PlatformSettings';
+import ContentManagementPage from '@/components/admin/ContentManagementPage'; // Import ContentManagementPage
+import { FileText } from 'lucide-react'; // Icon for Content Management
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const AdminDashboard = () => {
