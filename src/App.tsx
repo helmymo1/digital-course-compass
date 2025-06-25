@@ -28,6 +28,9 @@ import PasswordReset from "./pages/PasswordReset";
 import EmailVerification from "./pages/EmailVerification";
 import SubscriptionPlansPage from "./pages/SubscriptionPlans";
 import StudentDashboard from "./pages/StudentDashboard";
+import AssignmentPage from "./pages/AssignmentPage";
+import QuizTaking from "./pages/QuizTaking";
+import SearchResults from "./pages/SearchResults";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +66,9 @@ const App = () => (
             <Route path="/promo-codes" element={<PromoCodeManagement />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/assignment/:assignmentId" element={<AssignmentPage />} />
+            <Route path="/quiz/:quizId/take" element={<QuizTaking />} />
+            <Route path="/search-results" element={<SearchResults />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
