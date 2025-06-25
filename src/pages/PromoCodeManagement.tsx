@@ -10,8 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Copy, Percent, Calendar, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PromoCodeManagement = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [promoCodes, setPromoCodes] = useState([
     {

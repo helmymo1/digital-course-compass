@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DollarSign, TrendingUp, Users, CreditCard, Download, Filter } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PaymentAnalytics = () => {
+  const { t } = useLanguage();
   const [timeRange, setTimeRange] = useState('30d');
 
   const paymentStats = {

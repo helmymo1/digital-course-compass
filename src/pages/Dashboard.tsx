@@ -6,10 +6,12 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Clock, Trophy, User, Settings, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Dashboard = () => {
+  const { t } = useLanguage();
   const [userRole, setUserRole] = useState<'student' | 'teacher'>('student');
-  const [userName, setUserName] = useState('Student');
+  const [userName, setUserName] = useState(t('student'));
 
   useEffect(() => {
     const role = localStorage.getItem('userRole') as 'student' | 'teacher' || 'student';

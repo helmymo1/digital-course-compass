@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera,  Save } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Profile = () => {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState({
     firstName: 'John',
     lastName: 'Smith',

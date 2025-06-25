@@ -3,27 +3,30 @@ import React from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users, Target, Award, Heart } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const About = () => {
+  const { t } = useLanguage();
+
   const teamMembers = [
     {
       name: 'Sarah Johnson',
-      role: 'CEO & Founder',
+      role: t('ceo_founder'),
       image: 'https://images.unsplash.com/photo-1494790108755-2616b612b593?w=300&h=300&fit=crop&crop=face'
     },
     {
       name: 'Michael Chen',
-      role: 'CTO',
+      role: t('cto'),
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face'
     },
     {
       name: 'Emily Rodriguez',
-      role: 'Head of Education',
+      role: t('head_of_education'),
       image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face'
     },
     {
       name: 'David Thompson',
-      role: 'Lead Developer',
+      role: t('lead_developer'),
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face'
     }
   ];
@@ -31,23 +34,23 @@ const About = () => {
   const values = [
     {
       icon: <Users className="h-8 w-8 text-blue-600" />,
-      title: 'Community First',
-      description: 'We believe in the power of learning together and supporting each other.'
+      title: t('community_first'),
+      description: t('community_first_desc')
     },
     {
       icon: <Target className="h-8 w-8 text-green-600" />,
-      title: 'Goal Oriented',
-      description: 'Every course is designed to help you achieve your specific learning objectives.'
+      title: t('goal_oriented'),
+      description: t('goal_oriented_desc')
     },
     {
       icon: <Award className="h-8 w-8 text-purple-600" />,
-      title: 'Excellence',
-      description: 'We maintain the highest standards in content quality and learning experience.'
+      title: t('excellence'),
+      description: t('excellence_desc')
     },
     {
       icon: <Heart className="h-8 w-8 text-red-600" />,
-      title: 'Passion',
-      description: 'We are passionate about education and helping people unlock their potential.'
+      title: t('passion'),
+      description: t('passion_desc')
     }
   ];
 
@@ -58,25 +61,21 @@ const About = () => {
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Story</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('our_story')}</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            LearnHub was founded with a simple mission: to make quality education accessible to everyone, 
-            everywhere. We believe that learning should be flexible, engaging, and tailored to individual needs.
+            {t('our_story_desc')}
           </p>
         </div>
 
         {/* Vision Section */}
         <div className="grid md:grid-cols-2 gap-12 mb-16">
           <div>
-            <h2 className="text-3xl font-bold mb-4">Our Vision</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('our_vision')}</h2>
             <p className="text-muted-foreground mb-4">
-              We envision a world where anyone can learn anything, anytime, anywhere. Our platform 
-              connects learners with expert instructors, providing personalized learning experiences 
-              that adapt to your pace and style.
+              {t('our_vision_desc')}
             </p>
             <p className="text-muted-foreground">
-              Since our founding, we've helped over 500,000 students achieve their learning goals 
-              through our comprehensive course catalog and supportive community.
+              {t('our_impact_desc')}
             </p>
           </div>
           <div>
@@ -90,7 +89,7 @@ const About = () => {
 
         {/* Values Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Values</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">{t('our_values')}</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {values.map((value, index) => (
               <Card key={index} className="text-center p-6">
@@ -108,7 +107,7 @@ const About = () => {
 
         {/* Team Section */}
         <div>
-          <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">{t('meet_our_team')}</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
               <Card key={index} className="text-center">

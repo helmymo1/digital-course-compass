@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ModalProps {
   isOpen: boolean;

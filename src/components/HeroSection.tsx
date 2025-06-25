@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Play, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const HeroSection = () => {
+  const { t } = useLanguage();
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   return (

@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CreditCard, Lock, Shield } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Payment = () => {
+  const { t } = useLanguage();
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('card');
