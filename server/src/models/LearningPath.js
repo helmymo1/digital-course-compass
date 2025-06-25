@@ -9,8 +9,15 @@ const learningPathSchema = new mongoose.Schema({
   }],
   targetAudience: { type: String }, // e.g., 'Beginner', 'Advanced Developer'
   // createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // Admin or Instructor
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  deletedAt: { // For soft deletes
+    type: Date,
+    default: null,
+    index: true,
+  },
 }, { timestamps: true });
+
+learningPathSchema.index({ isActive: 1, deletedAt: 1 }); // Composite index
 
 const LearningPath = mongoose.model('LearningPath', learningPathSchema);
 module.exports = LearningPath;
