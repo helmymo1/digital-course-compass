@@ -42,11 +42,11 @@ const PasswordReset = () => {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         type={modalType}
-        title={modalType === 'success' ? t('Reset Link Sent', 'تم إرسال رابط إعادة التعيين') : t('Error', 'خطأ')}
+        title={modalType === 'success' ? t('Reset Link Sent') : t('Error')}
         message={
           modalType === 'success' 
-            ? t('Check your email for password reset instructions', 'تحقق من بريدك الإلكتروني للحصول على تعليمات إعادة تعيين كلمة المرور')
-            : t('Failed to send reset link. Please try again.', 'فشل في إرسال رابط إعادة التعيين. حاول مرة أخرى.')
+            ? t('Check your email for password reset instructions')
+            : t('Failed to send reset link. Please try again.')
         }
       />
     </div>

@@ -28,7 +28,7 @@ const PaymentSuccess = () => {
               <div className="bg-gray-50 p-6 rounded-lg mb-8">
                 <h2 className="font-semibold mb-2">{t('course_enrolled_label')}</h2>
                 <p className="text-lg">Complete Web Development Bootcamp</p>
-                <p className="text-sm text-muted-foreground">{t('by_instructor', { instructor: 'John Smith' })}</p>
+                <p className="text-sm text-muted-foreground">{t('by_instructor')}</p>
               </div>
 
               <div className="space-y-4">

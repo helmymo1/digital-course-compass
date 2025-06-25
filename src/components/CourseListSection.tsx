@@ -20,6 +20,12 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
   error = null,
   emptyStateMessage = "No courses to display in this section."
 }) => {
+  // Helper function to capitalize the first letter of each word
+  const capitalizeLevel = (level: string): "Beginner" | "Intermediate" | "Advanced" => {
+    const capitalized = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+    return capitalized as "Beginner" | "Intermediate" | "Advanced";
+  };
+
   if (isLoading) {
     return (
       <div className="py-8">
@@ -73,7 +79,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
             rating={course.rating || course.averageRating}
             totalStudents={course.totalStudents || course.enrollmentCount}
             duration={course.duration || (course.estimatedDurationHours ? `${course.estimatedDurationHours} hours` : 'N/A')}
-            level={course.level}
+            level={capitalizeLevel(course.level)}
             category={course.category}
             onViewDetails={onViewDetails}
           />
