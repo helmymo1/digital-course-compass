@@ -4,56 +4,63 @@ const userSubscriptionSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+        required: [true, 'User is required for subscription.'],
         index: true,
     },
-    plan: { // Reference to our SubscriptionPlan model
+    plan: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'SubscriptionPlan',
-        required: true,
+        required: [true, 'Subscription plan is required.'],
     },
-    stripeSubscriptionId: { // ID of the Subscription object in Stripe
+    stripeSubscriptionId: {
         type: String,
-        required: true,
-        unique: true,
-        sparse: true, // Required only if gateway is Stripe
-        index: true,
+        // required: true, // Conditional, see below
+        // unique: true, // Handled by partial index
+        sparse: true,
+        trim: true,
+        index: true, // Keep basic index for lookups
     },
-    paypalSubscriptionId: { // ID of the Subscription agreement in PayPal
+    paypalSubscriptionId: {
         type: String,
-        unique: true,
-        sparse: true, // Required only if gateway is PayPal
-        index: true,
+        // unique: true, // Handled by partial index
+        sparse: true,
+        trim: true,
+        index: true, // Keep basic index for lookups
     },
-    gateway: { // To identify the payment gateway for this subscription
+    gateway: {
         type: String,
-        required: true,
-        enum: ['Stripe', 'PayPal'],
+        required: [true, 'Payment gateway is required.'],
+        enum: {
+            values: ['Stripe', 'PayPal'],
+            message: 'Gateway "{VALUE}" is not supported.'
+        },
     },
-    gatewayCustomerId: { // Stripe Customer ID or PayPal Payer ID (if applicable/needed)
+    gatewayCustomerId: {
         type: String,
-        required: true, // Customer must exist on the gateway
+        required: [true, 'Gateway Customer ID is required.'],
+        trim: true,
     },
-    gatewayPriceOrPlanId: { // Stripe Price ID or PayPal Plan ID (denormalized)
+    gatewayPriceOrPlanId: {
         type: String,
-        required: true,
+        required: [true, 'Gateway Price/Plan ID is required.'],
+        trim: true,
     },
     status: {
-        // Stripe: active, past_due, unpaid, canceled, incomplete, incomplete_expired, trialing, ended, paused
-        // PayPal: APPROVAL_PENDING, APPROVED, ACTIVE, SUSPENDED, CANCELLED, EXPIRED
-        // Using a common set of statuses, gateway-specific statuses can be in metadata or mapped.
         type: String,
-        required: true,
-        enum: [
-            'pending_approval', // PayPal specific, or Stripe's 'incomplete'
-            'active',
-            'trialing',
-            'suspended',        // PayPal specific, or Stripe's 'past_due'/'unpaid' mapped
-            'canceled',
-            'expired',          // PayPal specific, or Stripe's 'ended'
-            'payment_due',      // General concept for Stripe's past_due/unpaid
-            'incomplete'        // Stripe specific
-        ],
+        required: [true, 'Subscription status is required.'],
+        enum: {
+            values: [
+                'pending_approval',
+                'active',
+                'trialing',
+                'suspended',
+                'canceled',
+                'expired',
+                'payment_due',
+                'incomplete'
+            ],
+            message: 'Subscription status "{VALUE}" is not valid.'
+        }
     },
     currentPeriodStart: {
         type: Date,
@@ -68,7 +75,7 @@ const userSubscriptionSchema = new mongoose.Schema({
     trialEnd: {
         type: Date,
     },
-    cancelAtPeriodEnd: { // Primarily a Stripe concept
+    cancelAtPeriodEnd: {
         type: Boolean,
         default: false,
     },
@@ -80,23 +87,36 @@ const userSubscriptionSchema = new mongoose.Schema({
     },
     metadata: {
         type: mongoose.Schema.Types.Mixed,
-    }
+    },
+    deletedAt: {
+        type: Date,
+        default: null,
+        index: true,
+    },
 }, { timestamps: true });
 
 // Conditional requirement for gateway-specific IDs
 userSubscriptionSchema.path('stripeSubscriptionId').required(function() {
-    return this.gateway === 'Stripe';
-}, 'Stripe Subscription ID is required for Stripe gateway.');
+    return this.gateway === 'Stripe' && !this.deletedAt; // Only required if Stripe and not deleted
+}, 'Stripe Subscription ID is required for active Stripe gateway subscriptions.');
 
 userSubscriptionSchema.path('paypalSubscriptionId').required(function() {
-    return this.gateway === 'PayPal';
-}, 'PayPal Subscription ID is required for PayPal gateway.');
+    return this.gateway === 'PayPal' && !this.deletedAt; // Only required if PayPal and not deleted
+}, 'PayPal Subscription ID is required for active PayPal gateway subscriptions.');
 
 // Indexes
-userSubscriptionSchema.index({ user: 1, status: 1 });
-userSubscriptionSchema.index({ user: 1, gateway: 1, status: 1 });
-userSubscriptionSchema.index({ stripeSubscriptionId: 1 }, { unique: true, sparse: true }); // Ensure existing index is sparse
-userSubscriptionSchema.index({ paypalSubscriptionId: 1 }, { unique: true, sparse: true });
+userSubscriptionSchema.index({ user: 1, status: 1, deletedAt: 1 }); // Include deletedAt in common queries
+userSubscriptionSchema.index({ user: 1, gateway: 1, status: 1, deletedAt: 1 }); // Include deletedAt
+
+// Partial unique indexes for gateway subscription IDs
+userSubscriptionSchema.index(
+    { stripeSubscriptionId: 1, deletedAt: 1 },
+    { unique: true, sparse: true, partialFilterExpression: { deletedAt: null, stripeSubscriptionId: { $ne: null } } }
+);
+userSubscriptionSchema.index(
+    { paypalSubscriptionId: 1, deletedAt: 1 },
+    { unique: true, sparse: true, partialFilterExpression: { deletedAt: null, paypalSubscriptionId: { $ne: null } } }
+);
 
 
 const UserSubscription = mongoose.model('UserSubscription', userSubscriptionSchema);

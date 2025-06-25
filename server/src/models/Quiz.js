@@ -16,7 +16,14 @@ const quizSchema = new mongoose.Schema({
   title: { type: String, required: true },
   questions: [questionSchema],
   passingScorePercentage: { type: Number, min: 0, max: 100, default: 70 },
+  deletedAt: { // For soft deletes
+    type: Date,
+    default: null,
+    index: true,
+  },
 }, { timestamps: true });
+
+quizSchema.index({ deletedAt: 1 }); // Index for soft delete
 
 const Quiz = mongoose.model('Quiz', quizSchema);
 module.exports = Quiz;

@@ -8,10 +8,17 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Name is required'],
     trim: true,
   },
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+    trim: true,
+    minlength: [2, 'Name must be at least 2 characters long'],
+    maxlength: [100, 'Name cannot exceed 100 characters'],
+  },
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
+    // unique: true, // Will be handled by a partial index
     trim: true,
     lowercase: true,
     match: [/.+\@.+\..+/, 'Please fill a valid email address'],
@@ -65,7 +72,26 @@ const userSchema = new mongoose.Schema({
         default: Date.now
     }
   }],
+  signupCohort: { // YYYY-MM format
+    type: String,
+    index: true, // Good for filtering/grouping by cohort
+  },
+  deletedAt: { // For soft deletes
+    type: Date,
+    default: null,
+    index: true, // To efficiently query for non-deleted documents
+  },
 }, { timestamps: true });
+
+// Pre-save hook to set signupCohort for new users
+userSchema.pre('save', function(next) {
+  if (this.isNew && this.createdAt) {
+    const year = this.createdAt.getFullYear();
+    const month = (this.createdAt.getMonth() + 1).toString().padStart(2, '0'); // +1 because getMonth is 0-indexed
+    this.signupCohort = `${year}-${month}`;
+  }
+  next();
+});
 
 // Pre-save hook to hash password before saving
 userSchema.pre('save', async function(next) {
