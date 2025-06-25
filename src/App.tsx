@@ -26,6 +26,8 @@ import PromoCodeManagement from "./pages/PromoCodeManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import PasswordReset from "./pages/PasswordReset";
 import EmailVerification from "./pages/EmailVerification";
+import SubscriptionPlansPage from "./pages/SubscriptionPlans";
+import StudentDashboard from "./pages/StudentDashboard";
 
 const queryClient = new QueryClient();
 
@@ -48,8 +50,11 @@ const App = () => (
             <Route path="/password-reset" element={<PasswordReset />} />
             <Route path="/verify-email/:token" element={<EmailVerification />} />
             <Route path="/payment/:courseId" element={<Payment />} />
+            <Route path="/payment/subscription/:planId" element={<Payment />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/subscription-plans" element={<SubscriptionPlansPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/student-dashboard" element={<StudentDashboard />} />
             <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/course-management" element={<CourseManagement />} />
