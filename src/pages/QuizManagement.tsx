@@ -45,11 +45,17 @@ const QuizManagement = () => {
     title: '',
     description: '',
     lesson: '',
-    questions: [],
+    questions: [], // This seems to be unused in newQuiz, it's for the separate questions state
     duration: ''
   });
 
-  const [questions, setQuestions] = useState([
+  type Question = {
+    question: string;
+    options: [string, string, string, string];
+    correctAnswer: number; // 0-3 for index
+  };
+
+  const [questions, setQuestions] = useState<Question[]>([
     { question: '', options: ['', '', '', ''], correctAnswer: 0 }
   ]);
 
@@ -85,14 +91,16 @@ const QuizManagement = () => {
     setQuestions([...questions, { question: '', options: ['', '', '', ''], correctAnswer: 0 }]);
   };
 
-  const updateQuestion = (index: number, field: string, value: any) => {
+  const updateQuestion = (index: number, field: string, value: string | number) => {
     const updatedQuestions = [...questions];
-    if (field === 'question') {
+    if (field === 'question' && typeof value === 'string') {
       updatedQuestions[index].question = value;
-    } else if (field.startsWith('option')) {
+    } else if (field.startsWith('option-') && typeof value === 'string') {
       const optionIndex = parseInt(field.split('-')[1]);
-      updatedQuestions[index].options[optionIndex] = value;
-    } else if (field === 'correctAnswer') {
+      if (optionIndex >= 0 && optionIndex < updatedQuestions[index].options.length) {
+        updatedQuestions[index].options[optionIndex] = value;
+      }
+    } else if (field === 'correctAnswer' && typeof value === 'number') {
       updatedQuestions[index].correctAnswer = value;
     }
     setQuestions(updatedQuestions);

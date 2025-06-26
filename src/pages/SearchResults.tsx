@@ -49,7 +49,14 @@ const SearchResults = () => {
   const [comparisonCourses, setComparisonCourses] = useState<typeof searchResults>([]);
   const [showComparison, setShowComparison] = useState(false);
 
-  const handleSearch = (filters: any) => {
+  type SearchFilters = {
+    query?: string;
+    level?: string; // Assuming level is a string like 'Beginner', 'Advanced'
+    rating?: number; // Assuming rating is a number like 4.5
+    // Add other filter properties as needed based on AdvancedSearch component
+  };
+
+  const handleSearch = (filters: SearchFilters) => {
     console.log('Search filters:', filters);
     // In a real app, you would make an API call here
     // For now, we'll just filter the existing results
