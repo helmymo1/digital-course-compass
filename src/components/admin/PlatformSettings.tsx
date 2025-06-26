@@ -9,9 +9,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Settings } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+type PlatformSettingsType = {
+  platformName: string;
+  enableRegistration: boolean;
+  requireEmailVerification: boolean;
+  allowGuestAccess: boolean;
+  maxFileUploadSize: number;
+  sessionTimeout: number;
+  maintenanceMode: boolean;
+  welcomeMessage: string;
+  supportEmail: string;
+  maxCoursesPerTeacher: number;
+  courseApprovalRequired: boolean;
+};
+
 const PlatformSettings = () => {
   const { t } = useLanguage();
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<PlatformSettingsType>({
     platformName: 'EduPlatform',
     enableRegistration: true,
     requireEmailVerification: true,
@@ -25,7 +39,10 @@ const PlatformSettings = () => {
     courseApprovalRequired: true,
   });
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = <K extends keyof PlatformSettingsType>(
+    key: K,
+    value: PlatformSettingsType[K]
+  ) => {
     setSettings(prev => ({
       ...prev,
       [key]: value

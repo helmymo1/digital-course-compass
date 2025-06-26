@@ -10,14 +10,35 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 // For a richer text editing experience, consider integrating a library like TipTap or ReactQuill
 // import RichTextEditor from '@/components/ui/RichTextEditor'; // Placeholder
 
+type ContentVersion = {
+  version: number;
+  body: string;
+  updatedAt: string; // ISO date string
+  updatedBy?: { name: string };
+};
+
+type Content = {
+  _id: string;
+  title: string;
+  body: string;
+  status: 'draft' | 'pending_approval' | 'approved' | 'scheduled' | 'published' | 'archived';
+  contentType: string;
+  tags: string[];
+  slug: string;
+  version: number;
+  versionHistory?: ContentVersion[];
+  scheduledAt: string | null; // ISO date string
+  updatedAt?: string; // ISO date string
+};
+
 interface ContentEditorComponentProps {
   contentId?: string | null; // If null/undefined, it's a new content item
-  onSave: (data: any) => void; // Callback after saving
+  onSave: (data: Content) => void; // Callback after saving
   onCancel: () => void; // Callback to go back or cancel
 }
 
 // Mock API functions - replace with actual API calls
-const fetchContentDetails = async (id: string) => {
+const fetchContentDetails = async (id: string): Promise<Content> => {
   console.log(`Fetching content details for ${id}`);
   await new Promise(resolve => setTimeout(resolve, 500));
   // Replace with: const response = await fetch('/api/v1/content/' + id);
@@ -39,7 +60,16 @@ const fetchContentDetails = async (id: string) => {
   };
 };
 
-const saveContentApi = async (contentData: any, id?: string | null) => {
+type ContentPayload = {
+  title: string;
+  body: string;
+  status: 'draft' | 'pending_approval' | 'approved' | 'scheduled' | 'published' | 'archived';
+  contentType: string;
+  tags: string[];
+  scheduledAt: string | null;
+};
+
+const saveContentApi = async (contentData: ContentPayload, id?: string | null): Promise<Content> => {
   const method = id ? 'PUT' : 'POST';
   const endpoint = id ? '/api/v1/content/' + id : '/api/v1/content';
   console.log(`Saving content to ${endpoint} with method ${method}`, contentData);
@@ -65,7 +95,7 @@ const ContentEditorComponent: React.FC<ContentEditorComponentProps> = ({ content
   const [scheduledAt, setScheduledAt] = useState<string | null>(null); // ISO string for datetime-local
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentContent, setCurrentContent] = useState<any>(null); // To store fetched content for editing
+  const [currentContent, setCurrentContent] = useState<Content | null>(null); // To store fetched content for editing
 
   useEffect(() => {
     if (contentId) {
@@ -223,7 +253,7 @@ const ContentEditorComponent: React.FC<ContentEditorComponentProps> = ({ content
                 <Label>Version History</Label>
                 <Card className="max-h-60 overflow-y-auto">
                     <CardContent className="p-4 space-y-3">
-                        {currentContent.versionHistory.slice().sort((a:any,b:any) => b.version - a.version).map((version: any) => (
+                        {currentContent.versionHistory.slice().sort((a: ContentVersion, b: ContentVersion) => b.version - a.version).map((version: ContentVersion) => (
                             <div key={version.version} className="p-2 border rounded-md">
                                 <div className="flex justify-between items-center text-sm">
                                     <span>Version {version.version} (by {version.updatedBy?.name || 'Unknown'})</span>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -85,32 +85,37 @@ const ContentListComponent: React.FC<ContentListComponentProps> = ({ onEditConte
     totalPages: 1,
   });
 
-  const loadContent = async (page = pagination.page, limit = pagination.limit) => {
+  const loadContent = useCallback(async (page = pagination.page, limit = pagination.limit) => {
     setIsLoading(true);
     setError(null);
     try {
       const data: ContentListResponse = await fetchContentList(page, limit);
       setContentItems(data.docs);
-      setPagination({
+      setPagination(prevPagination => ({ // Use functional update for safety if needed, though direct set is often fine
+        ...prevPagination, // Keep other potential pagination fields if any
         page: data.page,
         limit: data.limit,
         totalDocs: data.totalDocs,
         totalPages: data.totalPages,
-      });
+      }));
     } catch (err) {
       console.error('Failed to load content:', err);
       setError('Failed to load content. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit]); // Dependencies of loadContent
 
   useEffect(() => {
     loadContent();
     return () => {
+        // Consider if selectedContentIds really needs to be cleared here.
+        // This cleanup runs if loadContent changes, or on unmount.
+        // If loadContent changes (e.g. page changes), clearing selection might be unexpected.
+        // For now, keeping original logic.
         setSelectedContentIds([]);
     }
-  }, []);
+  }, [loadContent]); // useEffect depends on the memoized loadContent
 
   const handleSelectAll = (checked: boolean | 'indeterminate') => {
     if (checked === true) {

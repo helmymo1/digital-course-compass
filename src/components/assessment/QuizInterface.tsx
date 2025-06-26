@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -35,22 +35,23 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const [timeRemaining, setTimeRemaining] = useState(timeLimit * 60);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Memoize handleSubmit as it's used in useEffect
+  const handleSubmit = useCallback(() => {
+    setIsSubmitted(true);
+    onSubmit(answers);
+  }, [onSubmit, answers, setIsSubmitted]); // Include all dependencies of handleSubmit
+
   useEffect(() => {
     if (timeRemaining > 0 && !isSubmitted) {
       const timer = setTimeout(() => setTimeRemaining(timeRemaining - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (timeRemaining === 0) {
+    } else if (timeRemaining === 0 && !isSubmitted) { // Ensure handleSubmit is called only once
       handleSubmit();
     }
-  }, [timeRemaining, isSubmitted]);
+  }, [timeRemaining, isSubmitted, handleSubmit]); // Add handleSubmit to dependencies
 
   const handleAnswerChange = (questionId: string, answer: string | string[]) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
-  };
-
-  const handleSubmit = () => {
-    setIsSubmitted(true);
-    onSubmit(answers);
   };
 
   const formatTime = (seconds: number) => {

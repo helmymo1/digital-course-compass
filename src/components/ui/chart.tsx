@@ -101,27 +101,30 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
+type DataPointValue = string | number | Date | boolean;
+type DataRecord = Record<string, any>; // More specific: Record<string, DataPointValue | DataRecord | DataPointValue[] | DataRecord[]>;
+
 interface TooltipPayloadItem {
-  value?: any
-  name?: string
-  dataKey?: string
-  color?: string
-  payload?: any
+  value?: DataPointValue;
+  name?: string;
+  dataKey?: string;
+  color?: string;
+  payload?: DataRecord;
 }
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
-    active?: boolean
-    payload?: TooltipPayloadItem[]
-    label?: any
+    active?: boolean;
+    payload?: TooltipPayloadItem[];
+    label?: DataPointValue | React.ReactNode;
     hideLabel?: boolean
     hideIndicator?: boolean
     indicator?: "line" | "dot" | "dashed"
     nameKey?: string
     labelKey?: string
-    labelFormatter?: (value: any, payload: TooltipPayloadItem[]) => React.ReactNode
-    formatter?: (value: any, name: string, item: TooltipPayloadItem, index: number, payload: any) => React.ReactNode
+    labelFormatter?: (value: DataPointValue | React.ReactNode, payload: TooltipPayloadItem[]) => React.ReactNode
+    formatter?: (value: DataPointValue | undefined, name: string, item: TooltipPayloadItem, index: number, payload: DataRecord | undefined) => React.ReactNode
     color?: string
     labelClassName?: string
   }

@@ -66,7 +66,10 @@ const CourseForm = ({ initialData, onSubmit, isLoading, mode }: CourseFormProps)
   const [outcomeInput, setOutcomeInput] = useState('');
   const [tagInput, setTagInput] = useState('');
 
-  const handleInputChange = (field: keyof CourseData, value: any) => {
+  const handleInputChange = <K extends keyof CourseData>(
+    field: K,
+    value: CourseData[K]
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
