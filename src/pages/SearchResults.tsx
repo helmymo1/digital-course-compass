@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
 import Navigation from '@/components/Navigation';
-import AdvancedSearch from '@/components/search/AdvancedSearch';
+import AdvancedSearch, { SearchFilters as AdvancedSearchFilters } from '@/components/search/AdvancedSearch';
 import CourseComparison from '@/components/search/CourseComparison';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, Clock, Users, Plus, Minus } from 'lucide-react';
@@ -48,19 +49,73 @@ const SearchResults = () => {
 
   const [comparisonCourses, setComparisonCourses] = useState<typeof searchResults>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [activeSort, setActiveSort] = useState<string>('relevance');
 
-  type SearchFilters = {
-    query?: string;
-    level?: string; // Assuming level is a string like 'Beginner', 'Advanced'
-    rating?: number; // Assuming rating is a number like 4.5
-    // Add other filter properties as needed based on AdvancedSearch component
-  };
+  // Use the imported SearchFilters type from AdvancedSearch.tsx
+  // We might extend it here if SearchResults page adds more params like sorting
+  interface CurrentSearchParameters extends AdvancedSearchFilters {
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }
 
-  const handleSearch = (filters: SearchFilters) => {
-    console.log('Search filters:', filters);
-    // In a real app, you would make an API call here
-    // For now, we'll just filter the existing results
-    const filtered = searchResults.filter(course => {
+const initialSearchResultsConst = [
+    {
+      id: '1',
+      title: 'Complete Web Development Bootcamp',
+      instructor: 'John Smith',
+      rating: 4.8,
+      totalRatings: 12500,
+      price: 89,
+      originalPrice: 199,
+      duration: '52 hours',
+      students: 45000,
+      level: 'Beginner',
+      language: 'English',
+      lastUpdated: '2024-01-15',
+      features: ['Certificates', 'Lifetime Access', 'Mobile Access', 'Downloadable Resources'],
+      curriculum: ['HTML & CSS Basics', 'JavaScript Fundamentals', 'React.js', 'Node.js', 'Database Design'],
+      image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=300&h=200&fit=crop'
+    },
+    {
+      id: '2',
+      title: 'Advanced React & Node.js',
+      instructor: 'Sarah Johnson',
+      rating: 4.9,
+      totalRatings: 8900,
+      price: 149,
+      originalPrice: 299,
+      duration: '35 hours',
+      students: 28000,
+      level: 'Advanced',
+      language: 'English',
+      lastUpdated: '2024-02-01',
+      features: ['Certificates', 'Lifetime Access', 'Mobile Access', 'Live Sessions'],
+      curriculum: ['Advanced React Patterns', 'Node.js Best Practices', 'GraphQL', 'Testing', 'Deployment'],
+      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=300&h=200&fit=crop'
+    }
+  ];
+
+  // Initialize searchResults with the constant data
+  // Note: The searchResults state itself is already initialized with mock data in its useState definition.
+  // This useEffect is redundant if initialSearchResultsConst is the same as the useState initial data.
+  // For clarity, let's ensure searchResults are initialized once with initialSearchResultsConst.
+  // We'll actually set the initial state for searchResults directly in its useState.
+  // const [searchResults, setSearchResults] = useState(initialSearchResultsConst); // This is better
+
+  // Let's adjust the existing useState for searchResults
+  // The original useState for searchResults already contains this mock data.
+  // So, we just need to ensure handleReset uses initialSearchResultsConst.
+
+  const handleSearch = (filters: AdvancedSearchFilters) => {
+    const currentParams: CurrentSearchParameters = { ...filters, sortBy: activeSort };
+    console.log('Search parameters:', currentParams);
+    // TODO: In a real app, make an API call here with currentParams
+    // For now, we'll just filter the existing results (client-side placeholder)
+
+    // Simple client-side filtering (replace with API call)
+    // This is a placeholder and will be replaced by an API call.
+    // It only implements a few filters for demonstration.
+    const filtered = initialSearchResultsConst.filter(course => {
       if (filters.query && !course.title.toLowerCase().includes(filters.query.toLowerCase())) {
         return false;
       }
@@ -70,49 +125,34 @@ const SearchResults = () => {
       if (filters.rating && course.rating < filters.rating) {
         return false;
       }
+      // Placeholder: filters.category, filters.duration, filters.price,
+      // filters.language, filters.instructor, filters.features are not implemented in this client-side filter.
       return true;
     });
     setSearchResults(filtered);
   };
 
+  const handleSortChange = (sortValue: string) => {
+    setActiveSort(sortValue);
+    // TODO: Re-trigger search by calling handleSearch with current filters + new sort.
+    // This requires AdvancedSearch to expose its current filters or SearchResults to store them.
+    // For now, this will trigger a search with the current filters from AdvancedSearch if it's re-rendered,
+    // or we need a state to hold the last filters.
+    // The ideal solution is to lift filter state or use a state management library.
+    // For now, we'll just log and the user would need to click "Search" again in AdvancedSearch
+    // or we call handleSearch with some stored/default filters.
+    console.log(`Sort changed to: ${sortValue}. User should ideally re-apply filters or we store them.`);
+    // Example: if we had access to current filters from AdvancedSearch, we'd call:
+    // handleSearch(currentAdvancedSearchFilters);
+    // For this iteration, the filtering will only re-apply if handleSearch is called again via AdvancedSearch.
+  };
+
   const handleReset = () => {
-    // Reset to original results
-    setSearchResults([
-      {
-        id: '1',
-        title: 'Complete Web Development Bootcamp',
-        instructor: 'John Smith',
-        rating: 4.8,
-        totalRatings: 12500,
-        price: 89,
-        originalPrice: 199,
-        duration: '52 hours',
-        students: 45000,
-        level: 'Beginner',
-        language: 'English',
-        lastUpdated: '2024-01-15',
-        features: ['Certificates', 'Lifetime Access', 'Mobile Access', 'Downloadable Resources'],
-        curriculum: ['HTML & CSS Basics', 'JavaScript Fundamentals', 'React.js', 'Node.js', 'Database Design'],
-        image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=300&h=200&fit=crop'
-      },
-      {
-        id: '2',
-        title: 'Advanced React & Node.js',
-        instructor: 'Sarah Johnson',
-        rating: 4.9,
-        totalRatings: 8900,
-        price: 149,
-        originalPrice: 299,
-        duration: '35 hours',
-        students: 28000,
-        level: 'Advanced',
-        language: 'English',
-        lastUpdated: '2024-02-01',
-        features: ['Certificates', 'Lifetime Access', 'Mobile Access', 'Live Sessions'],
-        curriculum: ['Advanced React Patterns', 'Node.js Best Practices', 'GraphQL', 'Testing', 'Deployment'],
-        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=300&h=200&fit=crop'
-      }
-    ]);
+    setSearchResults(initialSearchResultsConst); // Use the const for resetting
+    setActiveSort('relevance');
+    // TODO: Call reset on AdvancedSearch component if it has its own state that needs clearing.
+    // The onReset prop passed to AdvancedSearch should handle this.
+    // AdvancedSearch's own handleReset function already clears its internal state.
   };
 
   const addToComparison = (course: typeof searchResults[0]) => {
@@ -148,7 +188,21 @@ const SearchResults = () => {
               <h1 className="text-2xl font-bold">
                 Search Results ({searchResults.length} courses)
               </h1>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4"> {/* Increased gap for Sort by */}
+                {/* Sorting Dropdown */}
+                <Select value={activeSort} onValueChange={handleSortChange}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="relevance">Sort by: Relevance</SelectItem>
+                    <SelectItem value="price_asc">Sort by: Price (Low to High)</SelectItem>
+                    <SelectItem value="price_desc">Sort by: Price (High to Low)</SelectItem>
+                    <SelectItem value="rating">Sort by: Rating</SelectItem>
+                    <SelectItem value="newest">Sort by: Newest</SelectItem>
+                  </SelectContent>
+                </Select>
+
                 {comparisonCourses.length > 0 && (
                   <Button
                     variant="outline"
