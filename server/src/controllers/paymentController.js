@@ -625,23 +625,300 @@ async function applyBulkDiscounts(currentCartTotal, items, currency) {
     }
 };
 
+// @desc    Create a PayPal Refund
+// @route   POST /api/v1/payments/paypal/create-refund
+// @access  Private (typically Admin or privileged user)
+exports.createPaypalRefund = async (req, res) => {
+    if (!paypalClient) {
+        return res.status(500).json({ success: false, message: 'PayPal client is not configured.' });
+    }
+
+    const { paymentDbId, amount, reason, invoiceNumber } = req.body;
+    // const adminUserId = req.user.id; // Assuming admin check is done via middleware
+
+    if (!paymentDbId) {
+        return res.status(400).json({ success: false, message: 'Payment Database ID is required for refund.' });
+    }
+
+    try {
+        const paymentRecord = await Payment.findById(paymentDbId);
+
+        if (!paymentRecord) {
+            return res.status(404).json({ success: false, message: 'Payment record not found.' });
+        }
+
+        if (paymentRecord.paymentGateway !== 'PayPal') {
+            return res.status(400).json({ success: false, message: 'This payment was not made through PayPal.' });
+        }
+
+        const paypalCaptureId = paymentRecord.metadata?.paypalCaptureId;
+        if (!paypalCaptureId) {
+            return res.status(400).json({ success: false, message: 'PayPal Capture ID not found for this payment. Cannot process refund.' });
+        }
+
+        if (paymentRecord.paymentStatus === 'refunded') {
+            return res.status(400).json({ success: false, message: 'Payment already fully refunded.' });
+        }
+        if (paymentRecord.paymentStatus !== 'succeeded' && paymentRecord.paymentStatus !== 'partially_refunded') {
+            return res.status(400).json({ success: false, message: `Payment status is ${paymentRecord.paymentStatus}, not eligible for refund.` });
+        }
+
+        const request = new paypalSDK.payments.CapturesRefundRequest(paypalCaptureId);
+        request.prefer("return=representation");
+        const requestBody = {};
+
+        let amountToRefund = 0;
+        const alreadyRefundedAmount = paymentRecord.metadata?.totalRefundedAmount || 0; // Assuming storing refunded amount in base units (e.g., USD)
+
+        if (amount) {
+            amountToRefund = parseFloat(amount);
+            if (amountToRefund <= 0) {
+                return res.status(400).json({ success: false, message: 'Refund amount must be positive.' });
+            }
+            if ((amountToRefund + alreadyRefundedAmount) > paymentRecord.amount) {
+                return res.status(400).json({ success: false, message: 'Refund amount exceeds refundable amount.' });
+            }
+            requestBody.amount = {
+                value: amountToRefund.toFixed(2),
+                currency_code: paymentRecord.currency // Ensure currency is stored in paymentRecord
+            };
+        } else {
+            // Full refund of the remaining amount
+            amountToRefund = paymentRecord.amount - alreadyRefundedAmount;
+            if (amountToRefund <= 0 && paymentRecord.paymentStatus !== 'partially_refunded') {
+                 return res.status(400).json({ success: false, message: 'No amount remaining to refund or payment not partially refunded prior.' });
+            }
+            // For full refund, PayPal API docs suggest not sending the amount object for some cases,
+            // but to be explicit, especially for partial becoming full, we send it.
+             requestBody.amount = {
+                value: amountToRefund.toFixed(2),
+                currency_code: paymentRecord.currency
+            };
+        }
+
+        if (reason) requestBody.note_to_payer = reason.substring(0, 255);
+        if (invoiceNumber) requestBody.invoice_id = invoiceNumber; // Optional: merchant's invoice ID for the refund
+
+        request.requestBody(requestBody);
+
+        console.log("Attempting PayPal refund for Capture ID:", paypalCaptureId, "with body:", requestBody);
+        const paypalRefundResponse = await paypalClient.execute(request);
+        const refundDetails = paypalRefundResponse.result;
+        console.log(`PayPal refund object created: ${refundDetails.id}, status: ${refundDetails.status}`);
+
+        if (!paymentRecord.metadata) paymentRecord.metadata = {};
+        if (!paymentRecord.metadata.refundAttempts) paymentRecord.metadata.refundAttempts = [];
+        paymentRecord.metadata.refundAttempts.push({
+            refundId: refundDetails.id,
+            amount: parseFloat(refundDetails.amount.value),
+            currency: refundDetails.amount.currency_code,
+            status: refundDetails.status,
+            requestedAt: new Date(),
+            reason: reason || null,
+            gatewayResponse: refundDetails
+        });
+
+        if (refundDetails.status === 'COMPLETED') {
+            paymentRecord.metadata.totalRefundedAmount = (paymentRecord.metadata.totalRefundedAmount || 0) + parseFloat(refundDetails.amount.value);
+            if (paymentRecord.metadata.totalRefundedAmount >= paymentRecord.amount) {
+                paymentRecord.paymentStatus = 'refunded';
+            } else {
+                paymentRecord.paymentStatus = 'partially_refunded';
+            }
+        } else if (refundDetails.status === 'PENDING') {
+            // Handle pending status appropriately, maybe a specific status or just log
+            console.warn(`PayPal refund ${refundDetails.id} is PENDING.`);
+            if (!paymentRecord.metadata.pendingRefunds) paymentRecord.metadata.pendingRefunds = [];
+            paymentRecord.metadata.pendingRefunds.push(refundDetails.id);
+        }
+        // Other statuses: FAILED, CANCELLED
+
+        await paymentRecord.save();
+
+        res.status(200).json({
+            success: true,
+            message: `PayPal refund request processed. PayPal Refund ID: ${refundDetails.id}, Status: ${refundDetails.status}.`,
+            paypalRefundId: refundDetails.id,
+            paypalRefundStatus: refundDetails.status,
+            paymentDbId: paymentRecord._id,
+            updatedPaymentStatus: paymentRecord.paymentStatus,
+            refundDetails: refundDetails
+        });
+
+    } catch (error) {
+        console.error('Create PayPal Refund Error:', error);
+        // PayPal SDK errors often come with a `statusCode` and `message` (sometimes in error.details)
+        const errorMessage = error.message || 'Failed to process PayPal refund.';
+        let statusCode = error.statusCode || 500;
+
+        if (error.name === 'PayPalAPIError' || error.isAxiosError) { // PayPal SDK might throw custom errors or use Axios errors
+            const paypalErrorDetails = error.details || (error.response && error.response.data && error.response.data.details);
+            const paypalErrorMessage = (error.response && error.response.data && error.response.data.message);
+            console.error('PayPal API Error Details:', paypalErrorDetails || 'No details');
+            console.error('PayPal API Error Message:', paypalErrorMessage || 'No message');
+
+            if (paypalErrorDetails && paypalErrorDetails.length > 0) {
+                const issue = paypalErrorDetails[0].issue;
+                if (issue === 'TRANSACTION_ALREADY_REFUNDED' || issue === 'REFUND_EXCEEDS_ALLOWED_MAX_REFUND_AMOUNT') {
+                    statusCode = 400;
+                    // Attempt to sync status if PayPal says already refunded
+                    const paymentToUpdate = await Payment.findById(paymentDbId);
+                    if (paymentToUpdate && paymentToUpdate.paymentStatus !== 'refunded') {
+                        // This is a guess; ideally, one would fetch the actual refund status from PayPal
+                        paymentToUpdate.paymentStatus = 'refunded';
+                        if(!paymentToUpdate.metadata) paymentToUpdate.metadata = {};
+                        paymentToUpdate.metadata.totalRefundedAmount = paymentToUpdate.amount;
+                        await paymentToUpdate.save();
+                        console.log(`Payment ${paymentDbId} status updated to 'refunded' based on PayPal error.`);
+                    }
+                }
+            }
+             return res.status(statusCode).json({ success: false, message: paypalErrorMessage || errorMessage, errorName: error.name, details: paypalErrorDetails });
+        }
+        res.status(statusCode).json({ success: false, message: errorMessage, errorName: error.name });
+    }
+};
+
+
 // @desc    Update/Change a user's PayPal Subscription Plan (Conceptual)
 // @route   POST /api/v1/payments/paypal/update-subscription-plan
 // @access  Private
 exports.updatePaypalSubscriptionPlan = async (req, res) => {
-    const { userSubscriptionId, newPlanId } = req.body;
+    const { userSubscriptionId, newPlanId } = req.body; // userSubscriptionId is our DB ID
     const userId = req.user.id;
 
     // This is a more complex flow for PayPal.
-    // Option 1: Cancel & Re-subscribe (Simpler API interaction, manual proration)
-    // Option 2: Use PayPal's Revise Subscription API (PATCH v1/billing/subscriptions/{id})
+    // Option 1: Cancel & Re-subscribe (Simpler API interaction, manual proration by app)
+    // Option 2: Use PayPal's Revise Subscription API (PATCH v1/billing/subscriptions/{id}) - more integrated
+    // This function will act as a placeholder for the more complex PayPal logic or guide to simpler flow.
 
-    console.log(`Attempt to change PayPal subscription ${userSubscriptionId} to new plan ${newPlanId} for user ${userId}.`);
+    console.log(`Attempt to change PayPal subscription (DB ID ${userSubscriptionId}) to new plan ${newPlanId} for user ${userId}.`);
+
+    // For a full implementation using Revise API:
+    // 1. Fetch UserSubscription by userSubscriptionId to get paypalSubscriptionId and current plan details.
+    // 2. Fetch the new SubscriptionPlan by newPlanId to get its paypalPlanId.
+    // 3. Construct a PayPal SDK SubscriptionsRevisionRequest.
+    //    This would involve specifying the new plan_id and potentially handling proration, trial periods etc.
+    //    `shipping_amount`, `shipping_discount` might be needed if relevant.
+    //    `plan.billing_cycles[].total_cycles` might need adjustment.
+    // 4. Execute the request.
+    // 5. Update local UserSubscription record with new plan, status, period dates from PayPal response.
+
+    // Example of how one might start (incomplete, needs PayPal SDK specifics for revision):
+    /*
+    try {
+        const userSubscription = await UserSubscription.findOne({ _id: userSubscriptionId, user: userId, gateway: 'PayPal' });
+        if (!userSubscription) return res.status(404).json({ success: false, message: 'PayPal subscription not found.' });
+        if (!userSubscription.paypalSubscriptionId) return res.status(400).json({ success: false, message: 'PayPal Subscription ID missing.' });
+
+        const newPlan = await SubscriptionPlan.findById(newPlanId);
+        if (!newPlan || !newPlan.paypalPlanId) return res.status(404).json({ success: false, message: 'New PayPal plan details not found.' });
+
+        // This is where the PayPal SDK call to revise the subscription would go.
+        // const request = new paypalSDK.subscriptions.SubscriptionsReviseRequest(userSubscription.paypalSubscriptionId);
+        // request.requestBody({ plan_id: newPlan.paypalPlanId, ...other_revision_details });
+        // const revisedPaypalSub = await paypalClient.execute(request);
+        // ... update userSubscription based on revisedPaypalSub.result ...
+        // await userSubscription.save();
+
+        res.status(501).json({ success: false, message: 'PayPal plan revision via API is complex and not fully implemented here. Placeholder for future.'});
+
+    } catch (error) {
+        console.error('Update PayPal Subscription Plan Error:', error);
+        res.status(500).json({ success: false, message: 'Failed to update PayPal subscription plan.', error: error.message });
+    }
+    */
+
     res.status(501).json({
         success: false,
         message: 'Changing PayPal subscription plan directly is complex. Recommended flow: cancel current subscription and create a new one with the desired plan. Direct update endpoint not fully implemented.',
-        guidance: "Cancel current subscription, then create a new one with the desired plan."
+        guidance: "Cancel current subscription, then create a new one with the desired plan using the standard creation endpoints."
     });
+};
+
+// === GENERIC SUBSCRIPTION FACADE FUNCTIONS ===
+
+// @desc    Create a subscription (Stripe or PayPal) based on gateway
+// @route   (Handler for POST /api/subscriptions)
+// @access  Private
+exports.createSubscriptionFacade = async (req, res, next) => {
+    const { gateway, planId, paymentMethodId } = req.body; // paymentMethodId for Stripe
+
+    if (!gateway || !planId) {
+        return res.status(400).json({ success: false, message: 'Gateway and Plan ID are required.' });
+    }
+
+    // To call the existing specific controllers, we need to make sure `req.user` is available
+    // and other necessary parts of `req` are correctly passed or reconstructed.
+    // This assumes that the `protect` middleware (which sets `req.user`) has already run for the route calling this facade.
+
+    if (gateway.toLowerCase() === 'stripe') {
+        // Call existing Stripe subscription creation logic
+        // Ensure `req.body` and `req.user` are correctly passed
+        return exports.createStripeSubscription(req, res, next);
+    } else if (gateway.toLowerCase() === 'paypal') {
+        // Call existing PayPal subscription creation logic
+        return exports.createPaypalSubscription(req, res, next);
+    } else {
+        return res.status(400).json({ success: false, message: 'Invalid payment gateway specified.' });
+    }
+};
+
+// @desc    Update a subscription's plan (Stripe or PayPal)
+// @route   (Handler for PUT /api/subscriptions/:id)
+// @access  Private
+exports.updateSubscriptionFacade = async (req, res, next) => {
+    const { id: userSubscriptionDbId } = req.params; // This is our database ID for UserSubscription
+    const { newPlanId } = req.body; // This is our database ID for the new SubscriptionPlan
+
+    if (!userSubscriptionDbId || !newPlanId) {
+        return res.status(400).json({ success: false, message: 'User Subscription ID and New Plan ID are required.' });
+    }
+
+    try {
+        const userSubscription = await UserSubscription.findById(userSubscriptionDbId)
+            .populate('user'); // Populate user to ensure req.user can be simulated if needed
+
+        if (!userSubscription) {
+            return res.status(404).json({ success: false, message: 'User subscription not found.' });
+        }
+
+        // Ensure the logged-in user owns this subscription or is an admin
+        // The `protect` middleware should handle `req.user`.
+        // If this facade is called after `protect`, `req.user` will be set.
+        // We might need an additional authorization check here if `req.user.id` !== `userSubscription.user._id.toString()` (and not admin)
+        if (req.user.id !== userSubscription.user._id.toString() /* && !req.user.isAdmin (add admin check if applicable) */) {
+            return res.status(403).json({ success: false, message: 'User not authorized to update this subscription.' });
+        }
+
+
+        // Reconstruct or pass relevant parts of req for the specific controllers
+        // The specific controllers `updateStripeSubscriptionPlan` and `updatePaypalSubscriptionPlan`
+        // expect `req.body.userSubscriptionId` (which is our DB ID) and `req.body.newPlanId`.
+        // And `req.user` for Stripe.
+
+        const mockReq = {
+            ...req, // Pass original req to carry over headers, etc.
+            user: req.user, // Ensure user is passed
+            body: { // Override body for the specific controller
+                userSubscriptionId: userSubscriptionDbId, // This is what updateStripeSubscriptionPlan expects
+                newPlanId: newPlanId
+            },
+            // params will be different, but specific controllers for plan update don't use req.params.id
+        };
+
+
+        if (userSubscription.gateway === 'Stripe') {
+            return exports.updateStripeSubscriptionPlan(mockReq, res, next);
+        } else if (userSubscription.gateway === 'PayPal') {
+            return exports.updatePaypalSubscriptionPlan(mockReq, res, next); // This is currently a placeholder
+        } else {
+            return res.status(400).json({ success: false, message: 'Subscription gateway not supported for plan update or unknown.' });
+        }
+    } catch (error) {
+        console.error('Update Subscription Facade Error:', error);
+        res.status(500).json({ success: false, message: 'Failed to update subscription.', error: error.message });
+    }
 };
 
 

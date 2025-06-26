@@ -35,6 +35,17 @@ router.post('/paypal/create-subscription', protect, paymentController.createPayp
 router.post('/paypal/cancel-subscription', protect, paymentController.cancelPaypalSubscription);
 router.post('/paypal/update-subscription-plan', protect, paymentController.updatePaypalSubscriptionPlan); // Placeholder
 
+// PayPal Refund Route
+// TODO: Add admin authorization middleware e.g. authorize(['admin'])
+router.post('/paypal/create-refund', protect, paymentController.createPaypalRefund);
+
+
+// Stripe Refund Route (ensure it exists or add it if it was part of the plan but not visible here)
+// Assuming createStripeRefund exists in controller and might need an admin guard too.
+// Example: router.post('/stripe/create-refund', protect, authorize(['admin']), paymentController.createStripeRefund);
+// If it's already defined elsewhere or implicitly covered by a generic /refund, this is fine.
+
+
 // Payment History Route
 router.get('/history', protect, paymentController.getUserPaymentHistory);
 

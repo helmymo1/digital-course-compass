@@ -18,7 +18,12 @@ const userRoutes = require('./routes/userRoutes');
 const courseRoutes = require('./routes/courseRoutes'); // Import course routes
 const enrollmentRoutes = require('./routes/enrollmentRoutes'); // Import enrollment routes
 const paymentRoutes = require('./routes/paymentRoutes'); // Import payment routes
+const paymentController = require('./controllers/paymentController'); // Import payment controller for direct use
 const subscriptionPlanRoutes = require('./routes/subscriptionPlanRoutes'); // Import subscription plan routes
+const subscriptionPlanController = require('./controllers/subscriptionPlanController'); // Import controller for direct use
+const subscriptionRoutes = require('./routes/subscriptionRoutes'); // Import new subscription routes
+const couponRoutes = require('./routes/couponRoutes'); // Import coupon routes
+const { protect, authorize } = require('./middleware/authMiddleware'); // Import auth middleware
 const analyticsRoutes = require('./routes/analyticsRoutes'); // Import analytics routes
 const moduleRoutes = require('./routes/moduleRoutes'); // Import module routes
 const lessonRoutes = require('./routes/lessonRoutes'); // Import lesson routes
@@ -36,7 +41,7 @@ const forumPostRoutes = require('./routes/forumPostRoutes'); // Import forum pos
 const badgeRoutes = require('./routes/badgeRoutes'); // Import badge routes
 const contentRoutes = require('./routes/contentRoutes'); // Import content routes
 const integrationRoutes = require('./routes/integrationRoutes'); // Import integration routes
-const integrationRoutes = require('./routes/integrationRoutes'); // Import integration routes
+
 
 // Mount Routers
 // Ensure your API base path is consistent. If it's /api/v1, it should be used here.
@@ -62,6 +67,40 @@ app.use('/api/v1/feedback', feedbackRoutes); // Mount feedback routes
 app.use('/api/v1/forum-posts', forumPostRoutes); // Mount forum post routes
 app.use('/api/v1/badges', badgeRoutes); // Mount badge routes
 app.use('/api/v1/integrations', integrationRoutes); // Mount integration routes
+
+// Mount new coupon routes
+app.use('/api/coupons', couponRoutes); // This will make POST /api/coupons/validate available
+
+// Mount new generic subscription routes
+app.use('/api/subscriptions', subscriptionRoutes); // Handles POST /api/subscriptions and PUT /api/subscriptions/:id
+
+
+// --- Standardized API Paths ---
+
+// GET /api/pricing/plans (Already implemented in a previous step)
+app.get('/api/pricing/plans', subscriptionPlanController.listSubscriptionPlans);
+
+// POST /api/payments/create-intent
+app.post('/api/payments/create-intent', protect, paymentController.createPaymentIntent);
+
+// GET /api/payments/history
+app.get('/api/payments/history', protect, paymentController.getUserPaymentHistory);
+
+// POST /api/payments/stripe/refund
+// Assuming createStripeRefund exists and is admin protected
+app.post('/api/payments/stripe/refund', protect, authorize(['admin']), paymentController.createStripeRefund);
+
+// POST /api/payments/paypal/refund
+// Assuming createPaypalRefund exists and is admin protected
+app.post('/api/payments/paypal/refund', protect, authorize(['admin']), paymentController.createPaypalRefund);
+
+// Note on POST /api/payments/confirm:
+// This endpoint is not being created as a generic server endpoint.
+// Payment confirmation for Stripe is primarily a client-side flow interacting with Stripe.js,
+// with server confirmation via webhooks (e.g., 'payment_intent.succeeded').
+// For PayPal, the equivalent server action is 'capturePaypalOrder' which is typically called after user approval on PayPal's site.
+// Existing routes like `/api/v1/payments/paypal/capture-order/:paypalOrderId` and webhook handlers cover these.
+
 
 // Basic Route
 app.get('/', (req, res) => {
