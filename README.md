@@ -1,73 +1,66 @@
-# Welcome to your Lovable project
+# Simple Flask Backend API
 
-## Project info
+This project implements a simple backend API using Flask to manage courses, lessons, content, quizzes, and assignments. All data is stored in-memory.
 
-**URL**: https://lovable.dev/projects/1cfa5941-291a-4ff6-b492-9e2f19a6cb5d
+## Endpoints
 
-## How can I edit this code?
+### Content
+- `POST /api/content/upload-video`
+  - Body: `{"filename": "video_name.mp4"}`
+  - Simulates video upload.
+- `POST /api/content/upload-document`
+  - Body: `{"filename": "document_name.pdf"}`
+  - Simulates document upload.
 
-There are several ways of editing your application.
+### Courses & Lessons
+- `GET /api/courses/:course_id/lessons`
+  - Retrieves all lessons for a given `course_id`.
+- `POST /api/courses/:course_id/lessons`
+  - Body: `{"title": "New Lesson Title", "content_ids": ["video_name.mp4"]}`
+  - Creates a new lesson for a `course_id`. `content_ids` is optional.
+- `PUT /api/lessons/:lesson_id`
+  - Body: `{"title": "Updated Title", "content_ids": []}`
+  - Updates a lesson. Fields are optional.
+- `DELETE /api/lessons/:lesson_id`
+  - Deletes a lesson.
+- `GET /api/lessons/:lesson_id/content`
+  - Retrieves content associated with a lesson.
 
-**Use Lovable**
+### Quizzes
+- `POST /api/quizzes`
+  - Body: `{"title": "Math Quiz", "questions": [{"q": "2+2?", "a": "4"}], "lesson_id": 1}`
+  - Creates a new quiz. `lesson_id` is optional.
+- `GET /api/quizzes/:quiz_id`
+  - Retrieves a quiz by its `quiz_id`.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1cfa5941-291a-4ff6-b492-9e2f19a6cb5d) and start prompting.
+### Assignments
+- `POST /api/assignments`
+  - Body: `{"title": "History Essay", "description": "Write an essay on...", "lesson_id": 2}`
+  - Creates a new assignment. `lesson_id` is optional.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Setup and Running
 
-**Use your preferred IDE**
+1.  **Create a virtual environment (recommended):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3.  **Run the Flask application:**
+    ```bash
+    python app.py
+    ```
+    The application will start in debug mode, typically on `http://127.0.0.1:5000/`.
 
-Follow these steps:
+## In-Memory Data
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1cfa5941-291a-4ff6-b492-9e2f19a6cb5d) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+The application uses a Python dictionary (`db`) in `app.py` to store all data. This means:
+- Data is not persistent and will be lost when the application stops.
+- `course_id`s are implicitly created when a lesson is added to them.
+- `lesson_id`, `quiz_id`, and `assignment_id` are auto-incrementing integers.
+- `content_ids` in lessons are expected to match filenames "uploaded" via the content upload endpoints for the `GET /api/lessons/:lesson_id/content` endpoint to resolve them.
