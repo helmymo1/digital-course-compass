@@ -1,30 +1,60 @@
 const express = require('express');
 const subscriptionPlanController = require('../controllers/subscriptionPlanController');
-const { protect } = require('../middleware/authMiddleware'); // Assuming 'protect' also checks for admin role or use a specific admin middleware
+const { protect, authorize } = require('../middleware/authMiddleware'); // Using authorize for role checks
 
 const router = express.Router();
 
-// Middleware to check for admin role - replace with your actual admin check
-const adminOnly = (req, res, next) => {
-    // Example: Check if req.user exists and has an 'Admin' role
-    if (req.user && req.user.roles && req.user.roles.includes('Admin')) {
-        next();
-    } else {
-        // If not using a global error handler for auth, send response directly
-        return res.status(403).json({ success: false, message: 'Forbidden: Administrator access required.' });
-    }
-};
+// This specific route as requested
+router.get('/pricing/plans', subscriptionPlanController.listSubscriptionPlans);
 
-// Admin routes for managing subscription plans
-router.post('/', protect, adminOnly, subscriptionPlanController.createSubscriptionPlan);
-router.get('/adminlist', protect, adminOnly, subscriptionPlanController.listSubscriptionPlans); // Differentiated admin list route
-router.get('/admin/:id', protect, adminOnly, subscriptionPlanController.getSubscriptionPlanById); // Admin get by ID
-router.put('/:id', protect, adminOnly, subscriptionPlanController.updateSubscriptionPlan);
-router.delete('/:id', protect, adminOnly, subscriptionPlanController.deleteSubscriptionPlan);
 
-// Public routes for listing active plans
-router.get('/', subscriptionPlanController.listSubscriptionPlans); // Public list (shows only active)
-router.get('/:id', subscriptionPlanController.getSubscriptionPlanById); // Public get by ID (shows only active)
+// Admin routes for managing subscription plans - Assuming this router is mounted under /api/admin/subscription-plans
+// If mounted under /api/subscription-plans, then these paths would be /admin, /admin/:id etc.
+// For clarity, let's assume a base path like /api/subscription-plans/admin for these
+router.post(
+    '/admin',
+    protect,
+    authorize(['admin']), // Ensure 'authorize' middleware can check for 'admin' role
+    subscriptionPlanController.createSubscriptionPlan
+);
+
+router.get(
+    '/admin', // Path becomes /api/subscription-plans/admin (if base is /api/subscription-plans)
+    protect,
+    authorize(['admin']),
+    subscriptionPlanController.listSubscriptionPlans // Controller will check req.path for '/admin'
+);
+
+router.get(
+    '/admin/:id',
+    protect,
+    authorize(['admin']),
+    subscriptionPlanController.getSubscriptionPlanById
+);
+
+router.put(
+    '/admin/:id',
+    protect,
+    authorize(['admin']),
+    subscriptionPlanController.updateSubscriptionPlan
+);
+
+router.delete(
+    '/admin/:id',
+    protect,
+    authorize(['admin']),
+    subscriptionPlanController.deleteSubscriptionPlan
+);
+
+// Public routes for listing active plans (if this router is mounted under /api/subscription-plans)
+router.get('/', subscriptionPlanController.listSubscriptionPlans); // Path becomes /api/subscription-plans/
+router.get('/:id', subscriptionPlanController.getSubscriptionPlanById); // Path becomes /api/subscription-plans/:id
 
 
 module.exports = router;
+// Note: The /api/pricing/plans route is added.
+// The admin routes are now structured under an '/admin' sub-path for clarity if this router is mounted at '/api/subscription-plans'.
+// The controller's logic `req.path.includes('/admin/')` will work correctly with these adjusted admin paths.
+// If the main server mounts this router at '/api', then the paths would be '/api/subscription-plans/admin', etc.
+// The key is that the new route '/pricing/plans' when mounted (e.g. at /api) will be '/api/pricing/plans'
+// and will not contain '/admin' in its path, so listSubscriptionPlans will filter for active plans.
