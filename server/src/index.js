@@ -41,10 +41,12 @@ const forumPostRoutes = require('./routes/forumPostRoutes'); // Import forum pos
 const badgeRoutes = require('./routes/badgeRoutes'); // Import badge routes
 const contentRoutes = require('./routes/contentRoutes'); // Import content routes
 const integrationRoutes = require('./routes/integrationRoutes'); // Import integration routes
+const mobileRoutes = require('./routes/mobileRoutes'); // Import mobile routes
 
 
 // Mount Routers
 // Ensure your API base path is consistent. If it's /api/v1, it should be used here.
+app.use('/api/mobile', mobileRoutes); // Mount mobile routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes); // Mount user routes
 app.use('/api/v1/courses', courseRoutes); // Mount course routes

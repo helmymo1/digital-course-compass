@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import OfflineDownloadButton from '@/components/OfflineDownloadButton'; // Import the button
 
 const CourseDetails = () => {
   const { t } = useLanguage();
@@ -354,6 +355,8 @@ const CourseDetails = () => {
                     <Button variant="outline" className="w-full">
                       Add to Wishlist
                     </Button>
+
+                    <OfflineDownloadButton courseId={course.id} courseTitle={course.title} />
 
                     <div className="pt-4 border-t space-y-3">
                       <div className="flex justify-between text-sm">

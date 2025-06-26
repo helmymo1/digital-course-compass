@@ -5,6 +5,13 @@ import CourseCard from '@/components/CourseCard';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel"; // Import Carousel components
 
 const CoursesPreview = () => {
   const { t } = useLanguage();
@@ -58,11 +65,27 @@ const CoursesPreview = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {featuredCourses.map(course => (
-            <CourseCard key={course.id} {...course} />
-          ))}
-        </div>
+        <Carousel
+          opts={{
+            align: "start",
+            loop: featuredCourses.length > 2, // Loop only if enough items
+          }}
+          className="w-full mb-12"
+        >
+          <CarouselContent className="-ml-4"> {/* Adjust margin for card padding that CarouselItem adds */}
+            {featuredCourses.map((course, index) => (
+              // CarouselItem defines how many items are visible at once on different screen sizes.
+              // pl-4 is to counteract the -ml-4 on CarouselContent for proper spacing.
+              <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                <div className="p-1 h-full"> {/* Inner div for potential focus styling and to ensure card takes full height */}
+                  <CourseCard {...course} className="h-full" /> {/* Ensure CourseCard can take className and fill height */}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden sm:flex" /> {/* Hide buttons on very small screens if desired, or style differently */}
+          <CarouselNext className="hidden sm:flex" />
+        </Carousel>
 
         <div className="text-center">
           <Link to="/courses">
