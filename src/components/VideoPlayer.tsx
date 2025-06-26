@@ -67,32 +67,30 @@ const VideoPlayer = ({ title, videoUrl, thumbnail }: VideoPlayerProps) => {
         {/* Control Buttons */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800">
-              <SkipBack className="h-4 w-4" />
+            <Button variant="ghost" className="text-white hover:bg-gray-800 p-2"> {/* Removed size="sm", added padding */}
+              <SkipBack className="h-5 w-5" /> {/* Increased icon size */}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-white hover:bg-gray-800"
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-gray-800 p-2" // Removed size="sm", added padding
               onClick={() => setIsPlaying(!isPlaying)}
             >
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />} {/* Increased icon size */}
             </Button>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800">
-              <SkipForward className="h-4 w-4" />
+            <Button variant="ghost" className="text-white hover:bg-gray-800 p-2"> {/* Removed size="sm", added padding */}
+              <SkipForward className="h-5 w-5" /> {/* Increased icon size */}
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-white hover:bg-gray-800"
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-gray-800 p-2" // Removed size="sm", added padding
               onClick={() => setIsMuted(!isMuted)}
             >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />} {/* Increased icon size */}
             </Button>
-            <div className="w-20">
+            <div className="w-24"> {/* Slightly increased width for volume slider area */}
               <Slider
                 value={volume}
                 onValueChange={setVolume}
@@ -100,8 +98,8 @@ const VideoPlayer = ({ title, videoUrl, thumbnail }: VideoPlayerProps) => {
                 step={1}
               />
             </div>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800">
-              <Maximize className="h-4 w-4" />
+            <Button variant="ghost" className="text-white hover:bg-gray-800 p-2"> {/* Removed size="sm", added padding */}
+              <Maximize className="h-5 w-5" /> {/* Increased icon size */}
             </Button>
           </div>
         </div>
