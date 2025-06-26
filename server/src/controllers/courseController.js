@@ -50,16 +50,31 @@ exports.createCourse = async (req, res) => {
 exports.getAllCourses = async (req, res) => {
   try {
     const {
-      category, status, instructor,
-      sortBy, order = 'asc',
+      // Existing filters
+      category, status, /* instructor - will be handled differently */
+      sortBy: oldSortBy, order = 'asc', // Renamed sortBy to avoid conflict with new sorting
       page = 1, limit = 10,
-      search,
-      level, minRating, minDuration, maxDuration // New filters
-    } = req.query;
-    const query = {};
+      search: querySearch, // Renamed search to avoid conflict with general 'query' term
+      level, minRating,
+      // minDuration, maxDuration, // Will be handled by 'duration' array
 
-    if (search) {
-      query.$text = { $search: search };
+      // New filters from AdvancedSearch
+      q, // General search query, alternative to 'search'
+      price, // e.g., "Free", "$0-$50"
+      language,
+      instructorName, // For searching by instructor's name
+      features, // Comma-separated string of features
+      duration, // e.g., "0,50" for min,max duration
+
+      // New sorting parameter
+      sort // e.g., "relevance", "price_asc", "rating"
+    } = req.query;
+
+    const query = {};
+    const searchTerm = q || querySearch;
+
+    if (searchTerm) {
+      query.$text = { $search: searchTerm };
     }
 
     if (category) {
@@ -77,19 +92,83 @@ exports.getAllCourses = async (req, res) => {
       }
     }
 
-    if (minDuration) {
-      const duration = parseFloat(minDuration);
-      if (!isNaN(duration)) {
-        query.estimatedDurationHours = { ...query.estimatedDurationHours, $gte: duration };
+    // Handle duration: [min, max]
+    if (duration) {
+      const parts = duration.split(',').map(parseFloat);
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        const [minDur, maxDur] = parts;
+        query.estimatedDurationHours = {};
+        if (minDur > 0) {
+          query.estimatedDurationHours.$gte = minDur;
+        }
+        if (maxDur > 0 && maxDur >= minDur) { // maxDur should be positive and greater than min
+          query.estimatedDurationHours.$lte = maxDur;
+        }
+         // If only one part of range is zero, it might mean no limit on that side.
+        // If $gte and $lte are the same, it's an exact match.
+        // If query.estimatedDurationHours ends up empty, remove it.
+        if (Object.keys(query.estimatedDurationHours).length === 0) {
+            delete query.estimatedDurationHours;
+        }
       }
     }
 
-    if (maxDuration) {
-      const duration = parseFloat(maxDuration);
-      if (!isNaN(duration)) {
-        query.estimatedDurationHours = { ...query.estimatedDurationHours, $lte: duration };
+    // Handle price: "Free", "$0-$50", "$50-$100", "$100-$200", "$200+"
+    if (price) {
+      if (price.toLowerCase() === 'free') {
+        query.price = 0;
+      } else if (price.startsWith('$')) {
+        const parts = price.substring(1).split('-');
+        if (parts.length === 2) {
+          const minPrice = parseFloat(parts[0]);
+          const maxPrice = parseFloat(parts[1]);
+          if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+            query.price = { $gte: minPrice, $lte: maxPrice };
+          }
+        } else if (price.endsWith('+')) {
+          const minPrice = parseFloat(price.substring(1, price.length - 1));
+          if (!isNaN(minPrice)) {
+            query.price = { $gte: minPrice };
+          }
+        }
       }
     }
+
+    if (language) {
+      query.language = language;
+    }
+
+    // Handle features (comma-separated string)
+    if (features) {
+      const featureList = features.split(',').map(f => f.trim()).filter(f => f);
+      if (featureList.length > 0) {
+        query.features = { $all: featureList };
+      }
+    }
+
+    // Handle instructorName search
+    if (instructorName) {
+      // This requires an async operation, so we find instructor IDs first
+      // This is a simplified example. Error handling & performance for many instructors would be needed.
+      try {
+        const instructors = await User.find({
+          name: { $regex: instructorName, $options: 'i' },
+          roles: 'Instructor'
+        }).select('_id');
+
+        if (instructors.length > 0) {
+          query.instructor = { $in: instructors.map(inst => inst._id) };
+        } else {
+          // If instructorName is specified but no instructors found, effectively no courses will match.
+          // Add a condition that's impossible to satisfy, or return empty results early.
+          query.instructor = { _id: null }; // No course will have a null instructor ID this way
+        }
+      } catch (e) {
+        console.error("Error searching for instructor:", e);
+        // Potentially don't filter by instructor if search fails, or return error
+      }
+    }
+
 
     // By default, non-authenticated or student users should only see 'published' courses.
     // Instructors/Admins can see all or filter by status.
@@ -101,16 +180,40 @@ exports.getAllCourses = async (req, res) => {
         query.status = 'published';
     }
 
-
-    if (instructor) {
-      query.instructor = instructor; // Assuming instructor ID is passed
-    }
-
+    // --- Sorting Logic ---
     const sortOptions = {};
-    if (sortBy) {
-        sortOptions[sortBy] = order === 'desc' ? -1 : 1;
+    if (sort) {
+        switch (sort) {
+            case 'relevance':
+                if (searchTerm) {
+                    sortOptions.score = { $meta: 'textScore' };
+                } else {
+                    sortOptions.createdAt = -1; // Default if no search term for relevance
+                }
+                break;
+            case 'price_asc':
+                sortOptions.price = 1;
+                break;
+            case 'price_desc':
+                sortOptions.price = -1;
+                break;
+            case 'rating':
+                sortOptions.averageRating = -1; // Higher rating first
+                break;
+            case 'newest':
+                sortOptions.createdAt = -1;
+                break;
+            default: // Fallback to old sortBy or newest
+                if (oldSortBy) {
+                    sortOptions[oldSortBy] = order === 'desc' ? -1 : 1;
+                } else {
+                    sortOptions.createdAt = -1;
+                }
+        }
+    } else if (oldSortBy) { // Support old sortBy if new 'sort' is not provided
+        sortOptions[oldSortBy] = order === 'desc' ? -1 : 1;
     } else {
-        sortOptions.createdAt = -1; // Default sort by newest
+        sortOptions.createdAt = -1; // Default sort
     }
 
     const pageNum = parseInt(page, 10);
@@ -133,15 +236,29 @@ exports.getAllCourses = async (req, res) => {
     });
 
     // Log search analytics if search term or significant filters were used
-    const appliedFiltersForAnalytics = { category, status, instructor, level, minRating, minDuration, maxDuration };
+    const currentFiltersForAnalytics = {
+        query: searchTerm,
+        category,
+        level,
+        minRating,
+        price,
+        language,
+        instructorName,
+        features,
+        duration,
+        status: query.status, // status from query object after role check
+        sort,
+        // oldSortBy, // if you want to log legacy sort params too
+        // order
+    };
     // Remove undefined keys to keep analytics data clean
-    Object.keys(appliedFiltersForAnalytics).forEach(key => appliedFiltersForAnalytics[key] === undefined && delete appliedFiltersForAnalytics[key]);
+    Object.keys(currentFiltersForAnalytics).forEach(key => currentFiltersForAnalytics[key] === undefined && delete currentFiltersForAnalytics[key]);
 
-    if (search || Object.keys(appliedFiltersForAnalytics).length > 0) {
+    if (searchTerm || Object.keys(currentFiltersForAnalytics).filter(k => k !== 'query' && k !== 'status').length > 0) { // Log if search or any filter other than default status
       SearchAnalytics.create({
-        query: search || null,
+        query: searchTerm || null,
         userId: req.user ? req.user.id : null,
-        filtersApplied: appliedFiltersForAnalytics,
+        filtersApplied: currentFiltersForAnalytics,
         resultsCount: totalCourses,
       }).catch(err => console.error('Failed to log search analytics:', err)); // Fire and forget
     }
@@ -406,4 +523,108 @@ exports.getCourseRecommendations = asyncHandler(async (req, res) => {
     count: recommendations.length,
     data: recommendations,
   });
+});
+
+// @desc    Get popular courses
+// @route   GET /api/courses/popular
+// @access  Public
+exports.getPopularCourses = asyncHandler(async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 10; // Default to 10 popular courses
+
+    // Define 'popular' by high enrollment count, then by high average rating
+    // Ensure courses are published
+    const courses = await Course.find({ status: 'published' })
+                                .sort({ enrollmentCount: -1, averageRating: -1 })
+                                .limit(limit)
+                                .populate('instructor', 'name') // Populate instructor's name
+                                .select('-description -modules -ratings -enrollments'); // Exclude heavier fields for a list/widget view
+
+    res.json({
+      success: true,
+      count: courses.length,
+      data: courses,
+    });
+  } catch (error) {
+    console.error('Error fetching popular courses:', error);
+    res.status(500).json({ message: 'Server error while fetching popular courses.' });
+  }
+});
+
+// @desc    Get trending courses
+// @route   GET /api/courses/trending
+// @access  Public
+exports.getTrendingCourses = asyncHandler(async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 10; // Default to 10 trending courses
+
+    // Define 'trending' by recency, then high enrollment count and average rating.
+    // Consider courses published recently (e.g., last 90 days) that are also popular.
+    // For a simpler approach without adding a specific "trending score" field:
+    // Sort by creation date (newest first), then by popularity metrics.
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const courses = await Course.find({
+      status: 'published',
+      // createdAt: { $gte: ninetyDaysAgo } // Optional: only consider courses created in last 90 days
+    })
+    .sort({ createdAt: -1, enrollmentCount: -1, averageRating: -1 })
+    .limit(limit)
+    .populate('instructor', 'name')
+    .select('-description -modules -ratings -enrollments'); // Slim payload
+
+    res.json({
+      success: true,
+      count: courses.length,
+      data: courses,
+    });
+  } catch (error) {
+    console.error('Error fetching trending courses:', error);
+    res.status(500).json({ message: 'Server error while fetching trending courses.' });
+  }
+});
+
+// @desc    Get courses similar to a given course
+// @route   GET /api/courses/similar/:courseId
+// @access  Public
+exports.getSimilarCourses = asyncHandler(async (req, res) => {
+  try {
+    const targetCourseId = req.params.courseId;
+    const limit = parseInt(req.query.limit, 10) || 5; // Default to 5 similar courses
+
+    const targetCourse = await Course.findById(targetCourseId);
+
+    if (!targetCourse) {
+      return res.status(404).json({ message: 'Target course not found.' });
+    }
+
+    // Find courses that are in the same category OR by the same instructor,
+    // are published, and are not the target course itself.
+    const similarCourses = await Course.find({
+      _id: { $ne: targetCourseId }, // Exclude the target course itself
+      status: 'published',
+      $or: [
+        { category: targetCourse.category },
+        { instructor: targetCourse.instructor }
+      ]
+    })
+    .sort({ averageRating: -1, enrollmentCount: -1 }) // Sort by rating and popularity
+    .limit(limit)
+    .populate('instructor', 'name')
+    .select('-description -modules -ratings -enrollments'); // Slim payload
+
+    res.json({
+      success: true,
+      count: similarCourses.length,
+      data: similarCourses,
+    });
+
+  } catch (error) {
+    console.error('Error fetching similar courses:', error);
+    if (error.kind === 'ObjectId') {
+        return res.status(400).json({ message: 'Invalid course ID format.' });
+    }
+    res.status(500).json({ message: 'Server error while fetching similar courses.' });
+  }
 });

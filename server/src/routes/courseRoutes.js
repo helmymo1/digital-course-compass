@@ -11,7 +11,10 @@ const {
   enrollCourse,
   addCourseReview,
   getCourseReviews,
-  getCourseRecommendations, // Added getCourseRecommendations
+  getCourseRecommendations,
+  getPopularCourses,
+  getTrendingCourses,
+  getSimilarCourses, // Added getSimilarCourses
 } = require('../controllers/courseController');
 const { createModule, getModulesByCourse } = require('../controllers/moduleController'); // Import module controllers
 const { getCourseProgress } = require('../controllers/studentProgressController'); // Import progress controller
@@ -21,7 +24,26 @@ const { protect, checkRole, checkEnrollment, authorize } = require('../middlewar
 
 // --- Public Routes ---
 // Get all courses (controller handles filtering for status e.g. 'published')
-router.get('/', getAllCourses);
+router.get('/', getAllCourses); // This is also /api/search/courses effectively
+
+// Get popular courses - place before /:id to ensure correct matching
+router.get('/popular', getPopularCourses);
+
+// Get trending courses - place before /:id
+router.get('/trending', getTrendingCourses);
+
+// Get courses similar to a specific course - place before /:id to avoid 'similar' being treated as an ID.
+// Or, ensure the parameter name is different, e.g., /similar/:courseIdParam
+// Using /similar/:courseId as per plan. This should be distinct enough from /:id if /:id uses a more generic 'id'.
+// If :id can match 'similar', then order matters or regex constraints on :id are needed.
+// For clarity and safety, placing it before generic /:id is good practice if params could clash.
+// However, Express matches routes in order. If `/similar/:courseId` is specific, it might be fine.
+// To be safe, let's ensure it's distinct or ordered carefully.
+// The current plan has it as /api/courses/similar/:courseId.
+// The router base is /api/courses, so the route here is /similar/:courseId.
+router.get('/similar/:courseId', getSimilarCourses);
+
+
 // Get a single course by ID (controller handles draft visibility)
 router.get('/:id', getCourseById);
 // Get all reviews for a specific course (controller handles draft visibility)
